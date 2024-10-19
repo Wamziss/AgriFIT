@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
@@ -14,7 +13,7 @@ const CustomDrawer = ({ navigation }) => {
       { label: 'Dashboard', action: () => navigation.navigate('ConsumerHome'), icon: 'home' },
       { label: 'Cart', action: () => navigation.navigate('Cart'), icon: 'cart' },
       { label: 'Orders', action: () => navigation.navigate('Orders'), icon: 'clipboard' },
-      { label: 'Sell', action: () => navigation.navigate('Sell'), icon: 'pricetag' },
+      { label: 'My Products', action: () => navigation.navigate('My Products'), icon: 'pricetag' },
     ],
     'Crop Farmer': [
       { label: 'Dashboard', action: () => navigation.navigate('CropFarmerHome'), icon: 'home' },
@@ -123,7 +122,7 @@ export default CustomDrawer;
 
 
 // import { useState} from 'react'
-// import React = require('react');
+// import React from 'react';
 // import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 // import { Picker } from '@react-native-picker/picker';
 

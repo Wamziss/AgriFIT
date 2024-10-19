@@ -1,5 +1,5 @@
-// import React = require('react')
-import React = require('react');
+// import React from 'react';
+import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import CustomHeader from '@/components/subcomponents/CustomHeader';
 
@@ -9,7 +9,7 @@ import LivestockFarmerHomeScreen from '@/components/livestockfarmers/Dashboard';
 
 import MyCartScreen from '@/components/consumers/Cart';
 import OrdersScreen from '@/components/consumers/Orders';
-import SellScreen from '@/components/consumers/Sell';
+import MyProductsScreen from '@/components/consumers/MyProducts';
 
 import CropCommunityScreen from '@/components/cropfarmers/Communities';
 import CropsManagerScreen from '@/components/cropfarmers/CropsManager';
@@ -32,7 +32,7 @@ const DashboardPages = () => {
         headerTitle: ()=> <CustomHeader/>,
         headerTitleAlign: 'center',
         headerStyle: {
-          backgroundColor: '#f5f5f5',
+          backgroundColor: '#F1F8E9',
         },
         headerLeftContainerStyle: {
           paddingLeft: 5,
@@ -45,7 +45,8 @@ const DashboardPages = () => {
         {/* Consumers */}
         <Drawer.Screen name="Cart" component={MyCartScreen} />
         <Drawer.Screen name="Orders" component={OrdersScreen} />
-        <Drawer.Screen name="Sell" component={SellScreen} />
+        <Drawer.Screen name="My Products" component={MyProductsScreen} />
+        
         {/* Crop Farmers */}
         <Drawer.Screen name="Crop Communities" component={CropCommunityScreen} />
         <Drawer.Screen name="Crops Manager" component={CropsManagerScreen} />

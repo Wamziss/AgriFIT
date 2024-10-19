@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, StatusBar } from 'react-native'
-import React = require('react')
+import React from 'react';
 
 const Home = () => {
   return (
