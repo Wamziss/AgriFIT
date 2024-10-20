@@ -25,9 +25,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <CustomHeader/>
-
-        <Text style={styles.title}>Sign In</Text>
+        <CustomHeader navigation={navigation} />
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
@@ -90,13 +88,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginLeft: 5,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
-    color: colors.text,
-  },
   form: {
     backgroundColor: colors.white,
     borderRadius: 10,
@@ -106,6 +97,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    marginVertical: 20,
   },
   inputContainer: {
     marginBottom: 15,
@@ -140,7 +132,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.black,
     paddingVertical: 15,
     borderRadius: 25,
     alignItems: 'center',

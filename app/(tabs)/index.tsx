@@ -20,7 +20,7 @@ export default function HomeScreen() {
   const slides = [
     "Easily find farmers close to you",
     "Join farmer communities to share insights",
-    "Partner with Agrobusiness and insurance agencies"
+    "Get Connected to Agrobusiness and insurance agencies"
   ];
 
   useEffect(() => {
@@ -73,11 +73,12 @@ export default function HomeScreen() {
             {['google', 'facebook', 'envelope'].map((platform, index) => (
               <TouchableOpacity 
                 key={platform} 
-                style={styles.socialButton}
+                // style={styles.socialButton}
+                style={platform === 'envelope'? styles.emailButton : styles.socialButton}
                 onPress={() => platform === 'envelope' ? navigation.navigate('SignIn') : null}
               >
-                <FontAwesome name={platform} size={24} color={colors.white} />
-                <Text style={styles.socialText}>
+                <FontAwesome name={platform} size={24} color={platform === 'envelope'? colors.white : colors.black} />
+                <Text style={platform === 'envelope'? styles.emailText: styles.socialText}>
                   Sign In with {platform === 'envelope' ? 'Email' : platform.charAt(0).toUpperCase() + platform.slice(1)}
                 </Text>
               </TouchableOpacity>
@@ -163,12 +164,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderColor: colors.black,
     shadowColor: "#000",
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
     elevation: 0.1,
   },
   partnerButtonText: {
@@ -181,7 +176,24 @@ const styles = StyleSheet.create({
   },
   socialButton: {
     flexDirection: 'row',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.background,
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  emailButton: {
+    flexDirection: 'row',
+    backgroundColor: colors.black,
     paddingVertical: 15,
     borderRadius: 25,
     alignItems: 'center',
@@ -198,14 +210,20 @@ const styles = StyleSheet.create({
   },
   socialText: {
     color: colors.black,
-    fontSize: 16,
+    fontSize: 18,
+    marginLeft: 10,
+    fontWeight: 'bold',
+  },
+  emailText: {
+    color: colors.white,
+    fontSize: 18,
     marginLeft: 10,
     fontWeight: 'bold',
   },
   signupText: {
     textAlign: 'center',
     color: colors.text,
-    marginTop: 10,
+    marginTop: 5,
     fontSize: 16,
     fontWeight: '600',
   },

@@ -15,7 +15,7 @@ const colors = {
   black: '#000000'
 };
 
-export default function SignUpScreen({ navigation }) {
+export default function SignUpScreen({ navigation }: { navigation: any }) {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -38,9 +38,9 @@ export default function SignUpScreen({ navigation }) {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <CustomHeader />
+        <CustomHeader navigation={navigation}/>
 
-        <Text style={styles.title}>Sign Up</Text>
+        {/* <Text style={styles.title}>Sign Up</Text> */}
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Full Name</Text>
@@ -139,13 +139,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginLeft: 5,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: colors.text,
-    textAlign: 'center',
-  },
   inputContainer: {
     marginBottom: 10,
   },
@@ -163,7 +156,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.black,
     padding: 15,
     borderRadius: 25,
     alignItems: 'center',
