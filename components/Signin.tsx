@@ -15,18 +15,20 @@ const colors = {
 };
 
 const SignInScreen = ({ navigation }: { navigation: any }) => {
+  const [emailOrPhoneNumber, setEmailOrPhoneNumber] = useState(''); // State for email or phone number
+  const [password, setPassword] = useState(''); // State for password
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   const handleSignIn = async () => {
     const formData = {
-        email: emailOrPhoneNumber,
+        email: emailOrPhoneNumber, // Use the correct field name as needed by your backend
         password: password
     };
 
     try {
-        const response = await fetch('http://localhost/AgriFIT/login.php', {
+        const response = await fetch('http://192.168.100.51/AgriFIT/login.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,8 +37,10 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
         });
 
         const result = await response.json();
+        console.log('Response:', result);
         if (result.status === 'success') {
             // Navigate to dashboard after successful login
+            alert('Login successful');
             navigation.navigate('Dashboard');
         } else {
             alert(result.message);
@@ -45,6 +49,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
         alert('An error occurred. Please try again.');
     }
 };
+
 
 
   return (
@@ -61,6 +66,8 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
             <TextInput
               style={styles.input}
               placeholderTextColor="#888"
+              value={emailOrPhoneNumber} // Set value from state
+              onChangeText={setEmailOrPhoneNumber} // Update state on change
             />
           </View>
 
@@ -70,6 +77,8 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
               <TextInput
                 style={styles.passwordInput}
                 secureTextEntry={!showPassword}
+                value={password} // Set value from state
+                onChangeText={setPassword} // Update state on change
               />
               <TouchableOpacity style={styles.eyeIcon} onPress={togglePasswordVisibility}>
                 <Ionicons name={showPassword ? "eye-off" : "eye"} size={24} color={colors.primary} />

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
-import { FontAwesome } from '@expo/vector-icons';
 import CustomHeader from './subcomponents/CustomHeader';
 
 // Color scheme (consistent with the landing page)
@@ -26,34 +25,43 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
   });
 
   const handleSignUp = async () => {
-    const formData = {
+
+    const signUpData = {
         full_name: formData.fullName,
         email: formData.email,
         phone_number: formData.phoneNumber,
         password: formData.password,
         profile_type: formData.defaultProfile,
-        profile_pic: '' // You can handle image uploads here if needed
+        profile_pic: ''
     };
 
     try {
-        const response = await fetch('http://localhost/AgriFIT/register.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        });
-
-        const result = await response.json();
-        if (result.status === 'success') {
-            // Navigate to home after sign-up
-            navigation.navigate('Home');
-        } else {
-            alert(result.message);
-        }
-    } catch (error) {
-        alert('An error occurred. Please try again.');
-    }
+      const response = await fetch('http://192.168.100.51/AgriFIT/register.php', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(signUpData),
+      });
+  
+      console.log('Response:', response); // Log the response
+  
+      if (!response.ok) {
+          throw new Error('Network response was not ok'); // Throw an error if the response is not okay
+      }
+  
+      const result = await response.json();
+      if (result.status === 'success') {
+          navigation.navigate('Dashboard');
+          alert('Registration successful!');
+      } else {
+          alert(result.message);
+      }
+  } catch (error) {
+      console.error('Fetch error:', error); // Log the error to the console
+      alert('An error occurred. Please try again.');
+  }
+  
 };
 
 
