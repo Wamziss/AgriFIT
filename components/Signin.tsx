@@ -19,6 +19,34 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
+  const handleSignIn = async () => {
+    const formData = {
+        email: emailOrPhoneNumber,
+        password: password
+    };
+
+    try {
+        const response = await fetch('http://localhost/AgriFIT/login.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            // Navigate to dashboard after successful login
+            navigation.navigate('Dashboard');
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        alert('An error occurred. Please try again.');
+    }
+};
+
+
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -49,7 +77,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Dashboard')}>
+          <TouchableOpacity style={styles.button} onPress={handleSignIn}>
             <Text style={styles.buttonText}>Sign In</Text>
           </TouchableOpacity>
 

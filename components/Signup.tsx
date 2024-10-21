@@ -25,12 +25,37 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
     defaultProfile: 'Consumer',
   });
 
-  const handleSignUp = () => {
-    // Add form validation and logic to register user
-    console.log(formData);
-    // Navigate to home after sign-up
-    navigation.navigate('Home');
-  };
+  const handleSignUp = async () => {
+    const formData = {
+        full_name: formData.fullName,
+        email: formData.email,
+        phone_number: formData.phoneNumber,
+        password: formData.password,
+        profile_type: formData.defaultProfile,
+        profile_pic: '' // You can handle image uploads here if needed
+    };
+
+    try {
+        const response = await fetch('http://localhost/AgriFIT/register.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            // Navigate to home after sign-up
+            navigation.navigate('Home');
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        alert('An error occurred. Please try again.');
+    }
+};
+
 
   return (
     <KeyboardAvoidingView 
