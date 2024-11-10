@@ -28,23 +28,24 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
     };
 
     try {
-        const response = await fetch('http://192.168.100.51/AgriFIT/login.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        });
+        // const response = await fetch('http://192.168.100.51/AgriFIT/login.php', {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify(formData),
+        // });
 
-        const result = await response.json();
-        console.log('Response:', result);
-        if (result.status === 'success') {
-            // Navigate to dashboard after successful login
-            alert('Login successful');
-            navigation.navigate('Dashboard');
-        } else {
-            alert(result.message);
-        }
+        // const result = await response.json();
+        // console.log('Response:', result);
+        // if (result.status === 'success') {
+        //     // Navigate to dashboard after successful login
+        //     alert('Login successful');
+        //     navigation.navigate('Dashboard');
+        // } else {
+        //     alert(result.message);
+        // }
+        navigation.navigate('Dashboard');
     } catch (error) {
         alert('An error occurred. Please try again.');
     }
@@ -68,6 +69,8 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
               placeholderTextColor="#888"
               value={emailOrPhoneNumber} // Set value from state
               onChangeText={setEmailOrPhoneNumber} // Update state on change
+              autoComplete="email"
+              keyboardType="email-address" 
             />
           </View>
 
@@ -79,6 +82,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
                 secureTextEntry={!showPassword}
                 value={password} // Set value from state
                 onChangeText={setPassword} // Update state on change
+                autoComplete='password'
               />
               <TouchableOpacity style={styles.eyeIcon} onPress={togglePasswordVisibility}>
                 <Ionicons name={showPassword ? "eye-off" : "eye"} size={24} color={colors.primary} />

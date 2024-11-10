@@ -1,0 +1,20 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="200"
+  height="60"
+  viewBox="0 0 200 60"
+>
+  <g fill="none" stroke="none" stroke-width="1">
+    <text
+      x="40"
+      y="40"
+      font-family="Arial"
+      font-size="36"
+      fill="#4CAF50"
+      font-weight="bold"
+    >
+      Agri
+      <tspan fill="#000000">FIT</tspan>
+    </text>
+  </g>
+</svg>

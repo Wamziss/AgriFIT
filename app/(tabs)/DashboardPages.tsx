@@ -22,6 +22,7 @@ import LivestockProfilesScreen from '@/components/livestockfarmers/LivestockProf
 import VeterinariansScreen from '@/components/livestockfarmers/Veterinarians';
 import LivestockInsuranceScreen from '@/components/livestockfarmers/Insurance';
 import CareGuidesScreen from '@/components/livestockfarmers/CareGuides';
+import MessagesScreen from '@/components/Messages';
 import CustomDrawer from './CustomDrawer';
 
 const Drawer = createDrawerNavigator();
@@ -59,6 +60,8 @@ const DashboardPages = () => {
         <Drawer.Screen name="Veterinarians" component={VeterinariansScreen} />
         <Drawer.Screen name="Livestock Insurance" component={LivestockInsuranceScreen} />
         <Drawer.Screen name="CareGuides" component={CareGuidesScreen} />
+
+        <Drawer.Screen name="Messages" component={MessagesScreen} />
       </Drawer.Navigator>
   )
 }
