@@ -1,5 +1,6 @@
 // import React from 'react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import CustomHeader from '@/components/subcomponents/CustomHeader';
 
@@ -22,14 +23,34 @@ import LivestockProfilesScreen from '@/components/livestockfarmers/LivestockProf
 import VeterinariansScreen from '@/components/livestockfarmers/Veterinarians';
 import LivestockInsuranceScreen from '@/components/livestockfarmers/Insurance';
 import CareGuidesScreen from '@/components/livestockfarmers/CareGuides';
+
 import MessagesScreen from '@/components/Messages';
+import SellProductsScreen from '@/components/Sell';
+
 import CustomDrawer from './CustomDrawer';
 
 const Drawer = createDrawerNavigator();
 
 const DashboardPages = () => {
+  const [userProfile, setUserProfile] = useState('');
+
+  useEffect(() => {
+    // Retrieve profile type from AsyncStorage
+    const fetchProfile = async () => {
+      try {
+        const profile = await AsyncStorage.getItem('profile_type');
+        if (profile) {
+          setUserProfile(profile);
+        }
+      } catch (error) {
+        console.error("Error fetching profile from AsyncStorage:", error);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   return (
-    <Drawer.Navigator drawerContent={(props) => <CustomDrawer {...props} />} screenOptions={{
+    <Drawer.Navigator drawerContent={(props) => <CustomDrawer {...props} selectedProfile={userProfile} />} screenOptions={{
         headerTitle: ()=> <CustomHeader/>,
         headerTitleAlign: 'center',
         headerStyle: {
@@ -41,8 +62,8 @@ const DashboardPages = () => {
       }}>
         {/* Dashboard Screens */}
         <Drawer.Screen name="ConsumerHome" component={ConsumerHomeScreen} />
-        <Drawer.Screen name="CropFarmerHome" component={CropFarmerHomeScreen} />
-        <Drawer.Screen name="LivestockFarmerHome" component={LivestockFarmerHomeScreen} />
+        <Drawer.Screen name="Crop FarmerHome" component={CropFarmerHomeScreen} />
+        <Drawer.Screen name="Livestock FarmerHome" component={LivestockFarmerHomeScreen} />
         {/* Consumers */}
         <Drawer.Screen name="Cart" component={MyCartScreen} />
         <Drawer.Screen name="Orders" component={OrdersScreen} />
@@ -61,6 +82,8 @@ const DashboardPages = () => {
         <Drawer.Screen name="Livestock Insurance" component={LivestockInsuranceScreen} />
         <Drawer.Screen name="CareGuides" component={CareGuidesScreen} />
 
+
+        <Drawer.Screen name="Sell" component={SellProductsScreen} />
         <Drawer.Screen name="Messages" component={MessagesScreen} />
       </Drawer.Navigator>
   )

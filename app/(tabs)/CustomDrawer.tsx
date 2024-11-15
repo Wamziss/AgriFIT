@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
 import UserProfile from './UserProfile'; // Import the UserProfile component
 
-const CustomDrawer = ({ navigation }) => { // Accept user data as a prop
-  const [selectedProfile, setSelectedProfile] = useState('Consumer');
-  const [activeItem, setActiveItem] = useState('Dashboard'); // Track active menu item
+const CustomDrawer = ({ navigation, selectedProfile }) => {
+  const [activeItem, setActiveItem] = useState('Dashboard');
+  const [profile, setProfile] = useState('');
 
   const profileMenuItems = {
     Consumer: [
@@ -33,19 +33,12 @@ const CustomDrawer = ({ navigation }) => { // Accept user data as a prop
     ],
   };
 
-  const handleProfileChange = (value: string) => {
-    setSelectedProfile(value);
-    if (value === 'Consumer') {
-      navigation.navigate('ConsumerHome');
-    } else if (value === 'Crop Farmer') {
-      navigation.navigate('CropFarmerHome');
-    } else {
-      navigation.navigate('LivestockFarmerHome');
-    }
-    setActiveItem('Dashboard'); // Reset active item when switching profiles
-  };
+  useEffect(() => {
+    // Synchronize the profile with the selectedProfile passed from props
+    setProfile(selectedProfile);
+  }, [selectedProfile]); // Runs whenever selectedProfile changes
 
-  const handleMenuItemPress = (item: any) => {
+  const handleMenuItemPress = (item) => {
     setActiveItem(item.label);
     item.action();
   };
@@ -54,64 +47,61 @@ const CustomDrawer = ({ navigation }) => { // Accept user data as a prop
     <View style={styles.drawerContent}>
       <UserProfile />
       <View style={styles.profileContainer}>
-      <Text style={styles.drawerHeader}>Profile:</Text>
-        <Picker selectedValue={selectedProfile} onValueChange={handleProfileChange} style={styles.profilePicker}>
+        <Text style={styles.drawerHeader}>Profile:</Text>
+        <Picker
+          selectedValue={profile}
+          onValueChange={(value) => {
+            setProfile(value);
+            navigation.navigate(`${value}Home`);
+          }}
+          style={styles.profilePicker}
+        >
           <Picker.Item label="Consumer" value="Consumer" />
           <Picker.Item label="Crop Farmer" value="Crop Farmer" />
           <Picker.Item label="Livestock Farmer" value="Livestock Farmer" />
         </Picker>
       </View>
       <View style={styles.menuItems}>
-        {profileMenuItems[selectedProfile].map((item: any, index: number) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => handleMenuItemPress(item)}
-            style={[
-              styles.menuItem,
-              activeItem === item.label && styles.activeMenuItem, // Apply active styling
-            ]}
-          >
-            <Ionicons name={item.icon} size={20} color={activeItem === item.label ? '#fff' : '#333'} />
-            <Text style={[styles.menuItemText, activeItem === item.label && styles.activeMenuItemText]}>
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-        </View>
+        {profileMenuItems[profile] &&
+          profileMenuItems[profile].map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => handleMenuItemPress(item)}
+              style={[
+                styles.menuItem,
+                activeItem === item.label && styles.activeMenuItem, // Apply active styling
+              ]}
+            >
+              <Ionicons name={item.icon} size={20} color={activeItem === item.label ? '#fff' : '#333'} />
+              <Text style={[styles.menuItemText, activeItem === item.label && styles.activeMenuItemText]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+      </View>
 
-        <View style={{ flex: 1 }} />
+      <View style={{ flex: 1 }} />
+      <TouchableOpacity onPress={() => navigation.navigate('Sell')} style={[styles.menuItem, activeItem === 'Messages' && styles.activeMenuItem]}>
+        <Ionicons name="chatbubbles" size={20} color={activeItem === 'Messages' ? '#fff' : '#333'} />
+        <Text style={[styles.menuItemText, activeItem === 'Sell' && styles.activeMenuItemText]}>Sell</Text>
+      </TouchableOpacity>
 
-        {/* Additional common menu items for all profiles */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Messages')}
-          style={[
-            styles.menuItem,
-            activeItem === 'Messages' && styles.activeMenuItem,
-          ]}
-        >
-          <Ionicons name="chatbubbles" size={20} color={activeItem === 'Messages' ? '#fff' : '#333'} />
-          <Text style={[styles.menuItemText, activeItem === 'Messages' && styles.activeMenuItemText]}>
-            Messages
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate('SignIn');
-          }}
-          style={[
-            styles.menuItem,
-            activeItem === 'Logout' && styles.activeMenuItem,
-          ]}
-        >
-          <Ionicons name="log-out" size={20} color={activeItem === 'Logout' ? '#fff' : '#333'} />
-          <Text style={[styles.menuItemText, activeItem === 'Logout' && styles.activeMenuItemText]}>
-            Logout
-          </Text>
-        </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Messages')} style={[styles.menuItem, activeItem === 'Messages' && styles.activeMenuItem]}>
+        <Ionicons name="chatbubbles" size={20} color={activeItem === 'Messages' ? '#fff' : '#333'} />
+        <Text style={[styles.menuItemText, activeItem === 'Messages' && styles.activeMenuItemText]}>Messages</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Auth')} style={[styles.menuItem, activeItem === 'Logout' && styles.activeMenuItem]}>
+        <Ionicons name="log-out" size={20} color={activeItem === 'Logout' ? '#fff' : '#333'} />
+        <Text style={[styles.menuItemText, activeItem === 'Logout' && styles.activeMenuItemText]}>Logout</Text>
+      </TouchableOpacity>
     </View>
   );
 };
+
+
+
+
 
 const styles = StyleSheet.create({
   profileContainer: {
@@ -164,6 +154,8 @@ const styles = StyleSheet.create({
 });
 
 export default CustomDrawer;
+
+
 
 
 // import React, { useState } from 'react';

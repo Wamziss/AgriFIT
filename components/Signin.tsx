@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import CustomHeader from './subcomponents/CustomHeader';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Color scheme (consistent with the landing page and sign up page)
+
 const colors = {
   primary: '#4CAF50',
   secondary: '#8BC34A',
@@ -21,32 +22,60 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
+  const handleSignInSuccess = (profile: string) => {
+    // Reset the navigation stack and navigate to the correct profile home screen
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Dashboard', params: { screen: `${profile}Home` } }],
+    });
+  };
+
+
   const handleSignIn = async () => {
-    const formData = {
-        email: emailOrPhoneNumber, // Use the correct field name as needed by your backend
-        password: password
-    };
-
     try {
-        // const response = await fetch('http://192.168.100.51/AgriFIT/login.php', {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify(formData),
-        // });
+        const response = await fetch('http://192.168.100.51/AgriFIT/login.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailOrPhoneNumber, password })
+        });
 
-        // const result = await response.json();
-        // console.log('Response:', result);
-        // if (result.status === 'success') {
-        //     // Navigate to dashboard after successful login
-        //     alert('Login successful');
-        //     navigation.navigate('Dashboard');
-        // } else {
-        //     alert(result.message);
-        // }
-        navigation.navigate('Dashboard');
+        if (!response.ok) {
+            console.error("Network response was not ok:", response.status, response.statusText);
+            alert("Unable to connect to server. Please check your network connection.");
+            return;
+        }
+
+        // Log the response text for debugging
+        const responseText = await response.text();
+        console.log("Response text:", responseText);
+
+        // Try parsing the response as JSON
+        let result;
+        try {
+            result = JSON.parse(responseText);  // Manually parse the JSON to catch errors
+        } catch (jsonError) {
+            console.error("Error parsing JSON:", jsonError);
+            alert("An error occurred with the response format. Please contact support.");
+            return;
+        }
+
+        if (result.status === 'success') {
+            await AsyncStorage.setItem('token', result.token);
+            await AsyncStorage.setItem('profile_type', result.profile_type);
+            await AsyncStorage.setItem('userName', result.user_name); // Save name
+            await AsyncStorage.setItem('userEmail', result.user_email); // Save email
+            await AsyncStorage.setItem('userPhone', result.user_phone);
+            const userid = String(result.user_id);
+            await AsyncStorage.setItem('sellerId', userid);
+
+            handleSignInSuccess(result.profile_type);
+            
+        } else {
+            console.warn("Login failed:", result.message);
+            alert(result.message || "Login failed. Please try again.");
+        }
     } catch (error) {
+        console.error("Error in handleSignIn:", error);
         alert('An error occurred. Please try again.');
     }
 };

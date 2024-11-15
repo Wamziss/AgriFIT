@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import CustomHeader from './subcomponents/CustomHeader';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Color scheme (consistent with the landing page)
 const colors = {
@@ -35,6 +36,12 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
         profile_pic: ''
     };
 
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+    
+
     try {
       const response = await fetch('http://192.168.100.51/AgriFIT/register.php', {
           method: 'POST',
@@ -53,6 +60,11 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
       const result = await response.json();
       if (result.status === 'success') {
           navigation.navigate('Dashboard');
+          await AsyncStorage.setItem('userName', result.name);
+          await AsyncStorage.setItem('userEmail', result.email);
+          await AsyncStorage.setItem('userPhone', result.phone);
+          await AsyncStorage.setItem('userProfilePic', result.profilePicture || 'default-profile-picture-url'); // You can set a default image URL or store the actual profile picture URL
+    
           alert('Registration successful!');
       } else {
           alert(result.message);
