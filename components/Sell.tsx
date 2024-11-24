@@ -12,6 +12,7 @@ const SellProductsScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [productCategory, setProductCategory] = useState('');
   const [subCategory, setSubCategory] = useState('');
+  const [image, setImage] = useState(null);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
@@ -24,12 +25,14 @@ const SellProductsScreen = () => {
     try {
       setLoading(true);
       const sellerId = await AsyncStorage.getItem('sellerId');
-      const response = await fetch(`${API_URL}/products.php?seller_id=${sellerId}`); // Add seller_id to URL
+
+      const response = await fetch(`${API_URL}/products.php?seller_id=${sellerId}`);
       if (!response.ok) throw new Error('Network response was not ok');
       console.log(response);
       const data = await response.json();
       console.log(data);
-      setProducts(data);  // No need to filter here if backend is correctly filtering by seller_id
+
+      setProducts(data);
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch products');
       console.error('Error fetching products:', error);
@@ -38,53 +41,86 @@ const SellProductsScreen = () => {
       setRefreshing(false);
     }
   };
-  
 
   const handleSubmit = async () => {
-    if (!productCategory || !name || !price || !description || !location) {
-      Alert.alert('Error', 'Please fill all required fields.');
-      return;
-    }
-
     try {
       setLoading(true);
-      const sellerId = await AsyncStorage.getItem('sellerId'); // Get seller ID from storage
-      
+  
+      const sellerId = await AsyncStorage.getItem('sellerId');
+  
+
       const formData = new FormData();
-      formData.append('seller_id', sellerId ?? '0'); 
+      formData.append('seller_id', sellerId ?? '0');
       formData.append('product_name', name);
       formData.append('product_price', price);
       formData.append('description', description);
       formData.append('category', productCategory);
-      formData.append('sub_category', subCategory);
+      formData.append('sub_category', subCategory || '');
       formData.append('location', location);
+  
 
+      if (image?.uri) {
+
+        const uriParts = image.uri.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+  
+
+        const imageFile = {
+          uri: image.uri,
+          type: `image/${fileType}` || 'image/jpeg',
+          name: `photo_${Date.now()}.${fileType}`,
+        };
+  
+
+        console.log('Image data being appended:', imageFile);
+  
+        formData.append('image', imageFile);
+      } else {
+        console.log('No image selected or invalid image data');
+      }
+  
+
+      console.log('FormData contents:', [...formData.entries()]);
+  
       const response = await fetch(`${API_URL}/products.php`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
         body: formData,
       });
-
-      if (!response.ok) throw new Error('Network response was not ok');
-      
-      const result = await response.text();
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Server error response:', errorText);
+        throw new Error('Network response was not ok');
+      }
+  
+      const result = await response.json();
       console.log('Server response:', result);
-
+  
       Alert.alert('Success', 'Product added successfully!');
+      
+
       setProductCategory('');
       setSubCategory('');
       setName('');
       setPrice('');
       setDescription('');
       setLocation('');
+      setImage(null);
       setModalVisible(false);
-      fetchProducts(); // Refresh the products list
+  
+
+      fetchProducts();
     } catch (error) {
-      Alert.alert('Error', 'Failed to add product');
       console.error('Error adding product:', error);
+      Alert.alert('Error', 'Failed to add product. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  };  
+
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
@@ -117,12 +153,17 @@ const SellProductsScreen = () => {
         setLocation={setLocation}
         description={description}
         setDescription={setDescription}
+        image={image}
+        setImage={setImage}
+
         loading={loading}
+        isEditMode={false}
+        productData={undefined}
       />
     </View>
   );
-};
 
+};
 const styles = StyleSheet.create({
   container: {
       flex: 1,

@@ -21,7 +21,12 @@
         "foregroundImage": "./assets/images/icon.svg",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.wamziss.AgriFIT"
+      "package": "com.wamziss.AgriFIT",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
