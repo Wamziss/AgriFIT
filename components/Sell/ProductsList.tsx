@@ -2,11 +2,16 @@ import React from 'react';
 import { FlatList, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import ProductCard from './ProductCard';
 
-const ProductList = ({ products, loading, refreshing, onRefresh }) => {
+const ProductList = ({ products, loading, refreshing, onRefresh, onDelete, onEdit }) => {
   return (
     <FlatList
       data={products}
-      renderItem={({ item }) => <ProductCard product={item} />}
+      renderItem={({ item }) => 
+        <ProductCard 
+          product={item} 
+          onDelete={onDelete} // Pass the onDelete prop
+          onEdit={onEdit}      
+          />}
       keyExtractor={(item) => item.product_id.toString()}
       contentContainerStyle={styles.productList}
       showsVerticalScrollIndicator={false}

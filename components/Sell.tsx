@@ -1,18 +1,17 @@
+// SellProductsScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import ProductFormModal from './Sell/ProductForm';
 import ProductList from './Sell/ProductsList';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet } from 'react-native';
 
-const API_URL = 'http://192.168.100.51/AgriFIT'; 
+const API_URL = 'http://192.168.100.51/AgriFIT';
 
 const SellProductsScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [productCategory, setProductCategory] = useState('');
   const [subCategory, setSubCategory] = useState('');
-  const [image, setImage] = useState(null);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
@@ -20,18 +19,22 @@ const SellProductsScreen = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [image, setImage] = useState<{ uri: string } | null>(null);
+
+  // Fetch products when component mounts
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const sellerId = await AsyncStorage.getItem('sellerId');
-
+      
       const response = await fetch(`${API_URL}/products.php?seller_id=${sellerId}`);
       if (!response.ok) throw new Error('Network response was not ok');
-      console.log(response);
+      
       const data = await response.json();
-      console.log(data);
-
       setProducts(data);
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch products');
@@ -42,14 +45,86 @@ const SellProductsScreen = () => {
     }
   };
 
+  const handleDelete = async (productId) => {
+    try {
+      const response = await fetch(`${API_URL}/products.php?product_id=${productId}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        Alert.alert('Success', 'Product deleted successfully');
+        // Update local state to remove the deleted product
+        setProducts(prevProducts => prevProducts.filter(product => product.product_id !== productId));
+      } else {
+        throw new Error(result.message || 'Failed to delete product');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to delete product');
+      console.error('Error deleting product:', error);
+    }
+  };
+
+  const handleEdit = async (updatedProduct) => {
+    try {
+      const formData = new FormData();
+      
+      // Add all product fields to formData
+      formData.append('product_id', updatedProduct.product_id);
+      formData.append('product_name', updatedProduct.product_name);
+      formData.append('product_price', updatedProduct.product_price);
+      formData.append('description', updatedProduct.description);
+      formData.append('category', updatedProduct.category);
+      formData.append('sub_category', updatedProduct.sub_category);
+      formData.append('location', updatedProduct.location);
+
+      // Handle image if it's a new one (has uri property)
+      if (updatedProduct.image?.uri && !updatedProduct.image.uri.includes('http')) {
+        const uriParts = updatedProduct.image.uri.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+        
+        formData.append('image', {
+          uri: updatedProduct.image.uri,
+          type: `image/${fileType}`,
+          name: `photo_${Date.now()}.${fileType}`,
+        });
+      }
+
+      const response = await fetch(`${API_URL}/products.php`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        Alert.alert('Success', 'Product updated successfully');
+        fetchProducts(); // Refresh the products list
+      } else {
+        throw new Error(result.message || 'Failed to update product');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update product');
+      console.error('Error updating product:', error);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       setLoading(true);
-  
-      const sellerId = await AsyncStorage.getItem('sellerId');
-  
+      
+      if (!image?.uri) {
+        Alert.alert('Error', 'Please select an image');
+        return;
+      }
 
+      const sellerId = await AsyncStorage.getItem('sellerId');
       const formData = new FormData();
+      
       formData.append('seller_id', sellerId ?? '0');
       formData.append('product_name', name);
       formData.append('product_price', price);
@@ -57,31 +132,18 @@ const SellProductsScreen = () => {
       formData.append('category', productCategory);
       formData.append('sub_category', subCategory || '');
       formData.append('location', location);
-  
 
       if (image?.uri) {
-
         const uriParts = image.uri.split('.');
         const fileType = uriParts[uriParts.length - 1];
-  
 
-        const imageFile = {
+        formData.append('image', {
           uri: image.uri,
-          type: `image/${fileType}` || 'image/jpeg',
+          type: `image/${fileType}`,
           name: `photo_${Date.now()}.${fileType}`,
-        };
-  
-
-        console.log('Image data being appended:', imageFile);
-  
-        formData.append('image', imageFile);
-      } else {
-        console.log('No image selected or invalid image data');
+        });
       }
-  
 
-      console.log('FormData contents:', [...formData.entries()]);
-  
       const response = await fetch(`${API_URL}/products.php`, {
         method: 'POST',
         headers: {
@@ -89,37 +151,34 @@ const SellProductsScreen = () => {
         },
         body: formData,
       });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Server error response:', errorText);
-        throw new Error('Network response was not ok');
-      }
-  
+
       const result = await response.json();
-      console.log('Server response:', result);
-  
-      Alert.alert('Success', 'Product added successfully!');
       
-
-      setProductCategory('');
-      setSubCategory('');
-      setName('');
-      setPrice('');
-      setDescription('');
-      setLocation('');
-      setImage(null);
-      setModalVisible(false);
-  
-
-      fetchProducts();
+      if (result.status === 'success') {
+        Alert.alert('Success', 'Product added successfully!');
+        resetForm();
+        fetchProducts();
+      } else {
+        throw new Error(result.message || 'Failed to add product');
+      }
     } catch (error) {
+      Alert.alert('Error', 'Failed to add product');
       console.error('Error adding product:', error);
-      Alert.alert('Error', 'Failed to add product. Please try again.');
     } finally {
       setLoading(false);
     }
-  };  
+  };
+
+  const resetForm = () => {
+    setProductCategory('');
+    setSubCategory('');
+    setName('');
+    setPrice('');
+    setDescription('');
+    setLocation('');
+    setImage(null);
+    setModalVisible(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -131,10 +190,9 @@ const SellProductsScreen = () => {
         products={products}
         loading={loading}
         refreshing={refreshing}
-        onRefresh={() => {
-          setRefreshing(true);
-          fetchProducts();
-        }}
+        onRefresh={fetchProducts}
+        onDelete={handleDelete}
+        onEdit={handleEdit}
       />
 
       <ProductFormModal
@@ -155,37 +213,13 @@ const SellProductsScreen = () => {
         setDescription={setDescription}
         image={image}
         setImage={setImage}
-
         loading={loading}
         isEditMode={false}
-        productData={undefined}
+        productData={null}
       />
     </View>
   );
-
 };
-const styles = StyleSheet.create({
-  container: {
-      flex: 1,
-      backgroundColor: '#F1F8E9',
-      padding: 20,
-      },
-      addButton: {
-      backgroundColor: '#4CAF50',
-      padding: 15,
-      borderRadius: 8,
-      marginBottom: 20,
-      elevation: 2,
-      },
-      addButtonText: {
-      color: '#FFFFFF',
-      fontWeight: 'bold',
-      fontSize: 16,
-      textAlign: 'center',
-      },
-      
-  });
-
   
 export default SellProductsScreen;
 
@@ -536,176 +570,176 @@ export default SellProductsScreen;
 //   );
 // };
 
-// const styles = StyleSheet.create({
-// container: {
-//     flex: 1,
-//     backgroundColor: '#F1F8E9',
-//     padding: 20,
-//     },
-//     addButton: {
-//     backgroundColor: '#4CAF50',
-//     padding: 15,
-//     borderRadius: 8,
-//     marginBottom: 20,
-//     elevation: 2,
-//     },
-//     addButtonText: {
-//     color: '#FFFFFF',
-//     fontWeight: 'bold',
-//     fontSize: 16,
-//     textAlign: 'center',
-//     },
-//     listHeader: {
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//     color: '#2E7D32',
-//     marginBottom: 15,
-//     },
-//     productList: {
-//     paddingBottom: 20,
-//     },
-//     productCard: {
-//     backgroundColor: '#FFFFFF',
-//     borderRadius: 10,
-//     padding: 15,
-//     marginBottom: 15,
-//     elevation: 3,
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     },
-//     productInfo: {
-//     flex: 1,
-//     },
-//     productName: {
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//     color: '#2E7D32',
-//     marginBottom: 5,
-//     },
-//     productCategory: {
-//     fontSize: 14,
-//     color: '#689F38',
-//     marginBottom: 5,
-//     },
-//     productPrice: {
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//     color: '#4CAF50',
-//     marginBottom: 5,
-//     },
-//     productDescription: {
-//     fontSize: 14,
-//     color: '#666666',
-//     marginBottom: 5,
-//     },
-//     productDate: {
-//     fontSize: 12,
-//     color: '#999999',
-//     },
-//     editButton: {
-//     backgroundColor: '#8BC34A',
-//     padding: 8,
-//     borderRadius: 5,
-//     alignSelf: 'flex-start',
-//     },
-//     editButtonText: {
-//     color: '#FFFFFF',
-//     fontSize: 14,
-//     fontWeight: 'bold',
-//     },
-//     modalContainer: {
-//     flex: 1,
-//     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-//     justifyContent: 'center',
-//     },
-//     modalContent: {
-//     backgroundColor: '#FFFFFF',
-//     margin: 20,
-//     borderRadius: 10,
-//     padding: 20,
-//     elevation: 5,
-//     maxHeight: '80%',
-//     },
-//     modalHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 20,
-//     },
-//     modalHeaderText: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     color: '#4CAF50',
-//     },
-//     closeButton: {
-//     padding: 5,
-//     },
-//     closeButtonText: {
-//     fontSize: 28,
-//     color: '#666666',
-//     fontWeight: 'bold',
-//     },
-//     input: {
-//     backgroundColor: '#FFFFFF',
-//     borderWidth: 1,
-//     borderColor: '#8BC34A',
-//     borderRadius: 8,
-//     padding: 12,
-//     marginBottom: 15,
-//     fontSize: 16,
-//     },
-//     textArea: {
-//     height: 100,
-//     textAlignVertical: 'top',
-//     },
-//     submitButton: {
-//     backgroundColor: '#4CAF50',
-//     padding: 15,
-//     borderRadius: 8,
-//     alignItems: 'center',
-//     marginTop: 10,
-//     elevation: 2,
-//     },
-//     submitButtonText: {
-//     color: '#FFFFFF',
-//     fontWeight: 'bold',
-//     fontSize: 16,
-//     },
-//   loader: {
-//     marginTop: 20,
-//   },
-//   emptyText: {
-//     textAlign: 'center',
-//     fontSize: 16,
-//     color: '#666666',
-//     marginTop: 20,
-//   },
-//   buttonContainer: {
-//     flexDirection: 'column',
-//     justifyContent: 'space-between',
-//     marginLeft: 10,
-//   },
-//   actionButton: {
-//     padding: 8,
-//     borderRadius: 5,
-//     marginBottom: 5,
-//     width: 70,
-//     alignItems: 'center',
-//   },
-//   deleteButton: {
-//     backgroundColor: '#FF5252',
-//   },
-//   actionButtonText: {
-//     color: '#FFFFFF',
-//     fontSize: 14,
-//     fontWeight: 'bold',
-//   },
-//   productLocation: {
-//     fontSize: 14,
-//     color: '#666666',
-//     marginBottom: 5,
-//   },
-// });
+const styles = StyleSheet.create({
+container: {
+    flex: 1,
+    backgroundColor: '#F1F8E9',
+    padding: 20,
+    },
+    addButton: {
+    backgroundColor: '#4CAF50',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    elevation: 2,
+    },
+    addButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+    },
+    listHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 15,
+    },
+    productList: {
+    paddingBottom: 20,
+    },
+    productCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+    elevation: 3,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    },
+    productInfo: {
+    flex: 1,
+    },
+    productName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 5,
+    },
+    productCategory: {
+    fontSize: 14,
+    color: '#689F38',
+    marginBottom: 5,
+    },
+    productPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginBottom: 5,
+    },
+    productDescription: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 5,
+    },
+    productDate: {
+    fontSize: 12,
+    color: '#999999',
+    },
+    editButton: {
+    backgroundColor: '#8BC34A',
+    padding: 8,
+    borderRadius: 5,
+    alignSelf: 'flex-start',
+    },
+    editButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    },
+    modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    },
+    modalContent: {
+    backgroundColor: '#FFFFFF',
+    margin: 20,
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
+    maxHeight: '80%',
+    },
+    modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    },
+    modalHeaderText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    },
+    closeButton: {
+    padding: 5,
+    },
+    closeButtonText: {
+    fontSize: 28,
+    color: '#666666',
+    fontWeight: 'bold',
+    },
+    input: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#8BC34A',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    fontSize: 16,
+    },
+    textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+    },
+    submitButton: {
+    backgroundColor: '#4CAF50',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+    elevation: 2,
+    },
+    submitButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+    },
+  loader: {
+    marginTop: 20,
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666666',
+    marginTop: 20,
+  },
+  buttonContainer: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    marginLeft: 10,
+  },
+  actionButton: {
+    padding: 8,
+    borderRadius: 5,
+    marginBottom: 5,
+    width: 70,
+    alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#FF5252',
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  productLocation: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 5,
+  },
+});
 
 // export default SellProductsScreen;
 

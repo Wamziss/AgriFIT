@@ -22,6 +22,8 @@ const ProductFormModal = ({
   setLocation,
   description,
   setDescription,
+  image,        
+  setImage,  
   loading,
   isEditMode,
   productData,
@@ -41,43 +43,12 @@ const ProductFormModal = ({
   setLocation: (location: string) => void;
   description: string;
   setDescription: (description: string) => void;
+  image: { uri: string } | null;
+  setImage: (image: { uri: string } | null) => void;
   loading: boolean;
   isEditMode: boolean;
   productData: any;
 }) => {
-  const [image, setImage] = useState<{ uri: string } | null>(null);
-
-  // If in edit mode, set the initial values of the fields
-  useEffect(() => {
-    if (isEditMode && productData) {
-      setProductCategory(productData.category);
-      setSubCategory(productData.sub_category);
-      setName(productData.name);
-      setPrice(productData.price);
-      setLocation(productData.location);
-      setDescription(productData.description);
-      setImage(productData.image ? { uri: productData.image } : null);
-    }
-  }, [isEditMode, productData]);
-
-  // const selectImage = async () => {
-  //   // Ask for permission
-  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  //   if (status !== 'granted') {
-  //     alert('Permission to access media library is required!');
-  //     return;
-  //   }
-  
-  //   // Launch the image picker
-  //   const result = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     quality: 1,
-  //   });
-  
-  //   if (!result.canceled && result.assets && result.assets.length > 0) {
-  //     setImage({ uri: result.assets[0].uri });
-  //   }
-  // };  
 
   const selectImage = async () => {
     try {
@@ -96,7 +67,7 @@ const ProductFormModal = ({
     
       if (!result.canceled && result.assets && result.assets.length > 0) {
         console.log('Selected image:', result.assets[0]);
-        setImage({ uri: result.assets[0].uri });
+        setImage({ uri: result.assets[0].uri }); // This will now update the parent's state
       }
     } catch (error) {
       console.error('Error selecting image:', error);
@@ -264,6 +235,62 @@ const styles = StyleSheet.create({
 export default ProductFormModal;
 
 
+
+  // If in edit mode, set the initial values of the fields
+  // useEffect(() => {
+  //   if (isEditMode && productData) {
+  //     setProductCategory(productData.category);
+  //     setSubCategory(productData.sub_category);
+  //     setName(productData.name);
+  //     setPrice(productData.price);
+  //     setLocation(productData.location);
+  //     setDescription(productData.description);
+  //     setImage(productData.image ? { uri: productData.image } : null);
+  //   }
+  // }, [isEditMode, productData]);
+
+  // const selectImage = async () => {
+  //   // Ask for permission
+  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //   if (status !== 'granted') {
+  //     alert('Permission to access media library is required!');
+  //     return;
+  //   }
+  
+  //   // Launch the image picker
+  //   const result = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  //     quality: 1,
+  //   });
+  
+  //   if (!result.canceled && result.assets && result.assets.length > 0) {
+  //     setImage({ uri: result.assets[0].uri });
+  //   }
+  // };  
+
+  // const selectImage = async () => {
+  //   try {
+  //     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //     if (status !== 'granted') {
+  //       alert('Permission to access media library is required!');
+  //       return;
+  //     }
+    
+  //     const result = await ImagePicker.launchImageLibraryAsync({
+  //       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  //       quality: 1,
+  //     });
+    
+  //     console.log('Image picker result:', result);
+    
+  //     if (!result.canceled && result.assets && result.assets.length > 0) {
+  //       console.log('Selected image:', result.assets[0]);
+  //       setImage({ uri: result.assets[0].uri });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error selecting image:', error);
+  //   }
+  // };
 
 
 // import React from 'react';
