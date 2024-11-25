@@ -78,8 +78,8 @@ const SellProductsScreen = () => {
       formData.append('category', updatedProduct.category);
       formData.append('sub_category', updatedProduct.sub_category);
       formData.append('location', updatedProduct.location);
-
-      // Handle image if it's a new one (has uri property)
+  
+      // Handle image if it's a new one
       if (updatedProduct.image?.uri && !updatedProduct.image.uri.includes('http')) {
         const uriParts = updatedProduct.image.uri.split('.');
         const fileType = uriParts[uriParts.length - 1];
@@ -90,7 +90,7 @@ const SellProductsScreen = () => {
           name: `photo_${Date.now()}.${fileType}`,
         });
       }
-
+  
       const response = await fetch(`${API_URL}/products.php`, {
         method: 'PUT',
         headers: {
@@ -98,9 +98,8 @@ const SellProductsScreen = () => {
         },
         body: formData,
       });
-
+  
       const result = await response.json();
-      
       if (result.success) {
         Alert.alert('Success', 'Product updated successfully');
         fetchProducts(); // Refresh the products list
@@ -123,6 +122,7 @@ const SellProductsScreen = () => {
       }
 
       const sellerId = await AsyncStorage.getItem('sellerId');
+      console.log('Seller ID:', sellerId);
       const formData = new FormData();
       
       formData.append('seller_id', sellerId ?? '0');
@@ -151,8 +151,10 @@ const SellProductsScreen = () => {
         },
         body: formData,
       });
+      console.log('Response:', response);
 
       const result = await response.json();
+      console.log('Response from API:', result);
       
       if (result.status === 'success') {
         Alert.alert('Success', 'Product added successfully!');

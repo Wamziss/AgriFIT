@@ -6,12 +6,13 @@ const ProductList = ({ products, loading, refreshing, onRefresh, onDelete, onEdi
   return (
     <FlatList
       data={products}
-      renderItem={({ item }) => 
+      renderItem={({ item }) => (
         <ProductCard 
           product={item} 
-          onDelete={onDelete} // Pass the onDelete prop
+          onDelete={onDelete}
           onEdit={onEdit}      
-          />}
+        />
+      )}
       keyExtractor={(item) => item.product_id.toString()}
       contentContainerStyle={styles.productList}
       showsVerticalScrollIndicator={false}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, StyleSheet, Image } from 'react-native';
+import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, StyleSheet, Image, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import * as MediaLibrary from 'expo-media-library';
@@ -57,22 +57,45 @@ const ProductFormModal = ({
         alert('Permission to access media library is required!');
         return;
       }
-    
+  
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 1,
       });
-    
-      console.log('Image picker result:', result);
-    
+  
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        console.log('Selected image:', result.assets[0]);
-        setImage({ uri: result.assets[0].uri }); // This will now update the parent's state
+        setImage({ uri: result.assets[0].uri });
       }
     } catch (error) {
       console.error('Error selecting image:', error);
+      Alert.alert('Error', 'Failed to select image');
     }
   };
+  // const selectImage = async () => {
+  //   try {
+  //     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //     if (status !== 'granted') {
+  //       alert('Permission to access media library is required!');
+  //       return;
+  //     }
+  
+  //     const result = await ImagePicker.launchImageLibraryAsync({
+  //       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  //       quality: 1,
+  //     });
+  
+  //     console.log('Image picker result:', result);
+  
+  //     if (!result.canceled && result.assets && result.assets.length > 0) {
+  //       setImage({ uri: result.assets[0].uri });
+  //     } else {
+  //       console.log('Image selection canceled.');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error selecting image:', error);
+  //   }
+  // };
+  
   
   const renderSubCategoryPicker = () => {
     if (productCategory === 'Produce') {
@@ -130,29 +153,29 @@ const ProductFormModal = ({
             <TextInput style={styles.input} placeholder="Location" value={location} onChangeText={setLocation} />
             <TextInput style={[styles.input, styles.textArea]} placeholder="Description" value={description} onChangeText={setDescription} multiline />
 
-            {/* Image upload section */}
+            {/* Image Upload */}
             <TouchableOpacity style={styles.imageUploadButton} onPress={selectImage}>
               <Text style={styles.imageUploadButtonText}>{image ? 'Change Image' : 'Upload Image'}</Text>
             </TouchableOpacity>
+
             {image && image.uri ? (
               <Image 
-                source={{ uri: image.uri }} 
+                source={image.uri ? { uri: image.uri } : require('../../assets/images/icon.png')}
                 style={styles.imagePreview} 
                 onError={(error) => console.log('Image loading error:', error)}
               />
             ) : null}
 
 
-
             <TouchableOpacity style={styles.submitButton} onPress={onSubmit} disabled={loading}>
               {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitButtonText}>{isEditMode ? 'Update' : 'Submit'}</Text>}
             </TouchableOpacity>
+
           </ScrollView>
         </View>
       </View>
     </Modal>
-  );
-};
+  );};
 
 const styles = StyleSheet.create({
   modalContainer: {
