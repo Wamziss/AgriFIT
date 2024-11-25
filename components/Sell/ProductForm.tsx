@@ -70,32 +70,7 @@ const ProductFormModal = ({
       console.error('Error selecting image:', error);
       Alert.alert('Error', 'Failed to select image');
     }
-  };
-  // const selectImage = async () => {
-  //   try {
-  //     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  //     if (status !== 'granted') {
-  //       alert('Permission to access media library is required!');
-  //       return;
-  //     }
-  
-  //     const result = await ImagePicker.launchImageLibraryAsync({
-  //       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //       quality: 1,
-  //     });
-  
-  //     console.log('Image picker result:', result);
-  
-  //     if (!result.canceled && result.assets && result.assets.length > 0) {
-  //       setImage({ uri: result.assets[0].uri });
-  //     } else {
-  //       console.log('Image selection canceled.');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error selecting image:', error);
-  //   }
-  // };
-  
+  };  
   
   const renderSubCategoryPicker = () => {
     if (productCategory === 'Produce') {
@@ -175,7 +150,8 @@ const ProductFormModal = ({
         </View>
       </View>
     </Modal>
-  );};
+  );
+};
 
 const styles = StyleSheet.create({
   modalContainer: {

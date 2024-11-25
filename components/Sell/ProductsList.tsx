@@ -10,7 +10,7 @@ const ProductList = ({ products, loading, refreshing, onRefresh, onDelete, onEdi
         <ProductCard 
           product={item} 
           onDelete={onDelete}
-          onEdit={onEdit}      
+          onEdit={onEdit}
         />
       )}
       keyExtractor={(item) => item.product_id.toString()}

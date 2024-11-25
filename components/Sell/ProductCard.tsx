@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import ProductFormModal from './ProductForm';
 
-const ProductCard = ({ product, onDelete }) => {
+
+const ProductCard = ({ 
+        product, 
+        onDelete, 
+        onEdit 
+      }: { 
+        product: any; 
+        onDelete: () => void; 
+        onEdit: (updatedProduct: any) => void;
+      }) => {  
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [productCategory, setProductCategory] = useState('');
   const [subCategory, setSubCategory] = useState('');
@@ -34,23 +43,28 @@ const ProductCard = ({ product, onDelete }) => {
     }
   };
 
-  // Handle product update submission
   const handleUpdateProduct = async () => {
     setLoading(true);
     try {
-      // Perform the update operation here (API call or state update)
-      // After successful update, close the modal
-      console.log('Product Updated:', {
-        productCategory,
-        subCategory,
-        name,
-        price,
-        location,
-        description,
-      });
-      setIsModalVisible(false); // Close the modal after updating
+      const updatedProduct = {
+        product_id: product.product_id,
+        product_name: name,
+        product_price: price,
+        description: description,
+        category: productCategory,
+        sub_category: subCategory,
+        location: location,
+        existing_image: product.image || '', 
+        image: image // Include the image if there's a new one
+      };
+  
+      // Call the onEdit prop function passed from the parent component
+      onEdit(updatedProduct);
+      
+      setIsModalVisible(false);
     } catch (error) {
       console.error('Error updating product:', error);
+      Alert.alert('Error', 'Failed to update product');
     } finally {
       setLoading(false);
     }
@@ -62,7 +76,7 @@ const ProductCard = ({ product, onDelete }) => {
         source={product.image ? { uri: `http://192.168.100.51/AgriFIT/${product.image}` } : undefined}
         style={styles.productImage} />
       <View style={styles.productDetails}>
-        <Text style={styles.productName}>{product.name}</Text>
+        <Text style={styles.productName}>{product.product_name}</Text>
         <Text style={styles.productPrice}>KSh {product.product_price}</Text>
         <Text style={styles.productLocation}>{product.location}</Text>
         <Text style={styles.productDescription} numberOfLines={2}>{product.description}</Text>
@@ -72,7 +86,7 @@ const ProductCard = ({ product, onDelete }) => {
         <TouchableOpacity onPress={handleEditClick} style={styles.editButton}>
           <Text style={styles.buttonText}>Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => onDelete(product.product_id)} style={styles.deleteButton}>
+        <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
           <Text style={styles.buttonText}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -167,6 +181,12 @@ export default ProductCard;
 
 
 function setImage(arg0: { uri: string; }) {
+  throw new Error('Function not implemented.');
+}
+
+function onEdit(updatedProduct: {
+  product_id: any; product_name: string; product_price: string; description: string; category: string; sub_category: string; location: string; image: { uri: string; } | null; // Include the image if there's a new one
+}) {
   throw new Error('Function not implemented.');
 }
 

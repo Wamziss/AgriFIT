@@ -66,33 +66,31 @@ const SellProductsScreen = () => {
     }
   };
 
-  const handleEdit = async (updatedProduct) => {
+  const handleEdit = async (updatedProduct: { [x: string]: string | Blob; }) => {
     try {
       const formData = new FormData();
-      
-      // Add all product fields to formData
-      formData.append('product_id', updatedProduct.product_id);
-      formData.append('product_name', updatedProduct.product_name);
-      formData.append('product_price', updatedProduct.product_price);
-      formData.append('description', updatedProduct.description);
-      formData.append('category', updatedProduct.category);
-      formData.append('sub_category', updatedProduct.sub_category);
-      formData.append('location', updatedProduct.location);
   
-      // Handle image if it's a new one
-      if (updatedProduct.image?.uri && !updatedProduct.image.uri.includes('http')) {
-        const uriParts = updatedProduct.image.uri.split('.');
-        const fileType = uriParts[uriParts.length - 1];
-        
-        formData.append('image', {
-          uri: updatedProduct.image.uri,
-          type: `image/${fileType}`,
-          name: `photo_${Date.now()}.${fileType}`,
-        });
-      }
-  
+      // Append all product details
+      Object.keys(updatedProduct).forEach(key => {
+        if (key === 'image' && typeof updatedProduct[key] === 'object' && 'uri' in updatedProduct[key]) {
+          // Convert image URI to a file
+          const imageObject = updatedProduct[key] as { uri: string };
+
+          const uriParts = imageObject.uri.split('.');
+          const fileType = uriParts[uriParts.length - 1];
+          
+          formData.append('image', {
+            uri: imageObject.uri,
+            type: `image/${fileType}`,
+            name: `photo_${Date.now()}.${fileType}`,
+          } as any);
+        } else {
+          formData.append(key, updatedProduct[key] as string);
+        }
+      });      
+
       const response = await fetch(`${API_URL}/products.php`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -100,17 +98,19 @@ const SellProductsScreen = () => {
       });
   
       const result = await response.json();
+  
       if (result.success) {
         Alert.alert('Success', 'Product updated successfully');
-        fetchProducts(); // Refresh the products list
+        fetchProducts(); // Refresh product list
       } else {
         throw new Error(result.message || 'Failed to update product');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to update product');
+      Alert.alert('Error', `Failed to update product: ${error.message}`);
       console.error('Error updating product:', error);
     }
   };
+
 
   const handleSubmit = async () => {
     try {
