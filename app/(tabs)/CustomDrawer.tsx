@@ -16,7 +16,7 @@ const CustomDrawer = ({ navigation, selectedProfile }) => {
       { label: 'My Products', action: () => navigation.navigate('My Products'), icon: 'pricetag' },
     ],
     'Crop Farmer': [
-      { label: 'Dashboard', action: () => navigation.navigate('CropFarmerHome'), icon: 'home' },
+      { label: 'Dashboard', action: () => navigation.navigate('Crop FarmerHome'), icon: 'home' },
       { label: 'Communities', action: () => navigation.navigate('Crop Communities'), icon: 'people' },
       { label: 'My Crops Manager', action: () => navigation.navigate('Crops Manager'), icon: 'leaf' },
       { label: 'AgriTech Companies', action: () => navigation.navigate('AgriTech Companies'), icon: 'business' },
@@ -24,7 +24,7 @@ const CustomDrawer = ({ navigation, selectedProfile }) => {
       { label: 'Pest Control Guides', action: () => navigation.navigate('Pest Guides'), icon: 'bug' },
     ],
     'Livestock Farmer': [
-      { label: 'Dashboard', action: () => navigation.navigate('LivestockFarmerHome'), icon: 'home' },
+      { label: 'Dashboard', action: () => navigation.navigate('Livestock FarmerHome'), icon: 'home' },
       { label: 'Communities', action: () => navigation.navigate('Livestock Communities'), icon: 'people' },
       { label: 'My Livestock Profiles', action: () => navigation.navigate('Livestock Profiles'), icon: 'sparkles' },
       { label: 'Veterinarians', action: () => navigation.navigate('Veterinarians'), icon: 'medkit' },
