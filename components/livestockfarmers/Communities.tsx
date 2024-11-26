@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import axios from 'axios';
+
+const API_BASE_URL = 'http://192.168.100.51/AgriFIT/';
 
 type Community = {
-  id: string;
+  forum_id: string;
   name: string;
   description: string;
-  membersCount: number;
+  members_count: number;
+};
+
+type ForumPost = {
+  post_id: string;
+  content: string;
+  created_by: string;
+  created_at: string;
 };
 
 const colors = {
@@ -20,60 +30,143 @@ const colors = {
   border: '#E0E0E0',
 };
 
-const communitiesData: Community[] = [
-  {
-    id: '1',
-    name: 'Cattle Farmers Society',
-    description: 'A community for farmers who keep cattle.',
-    membersCount: 125,
-  },
-  {
-    id: '2',
-    name: 'Sustainable Livestock Farming Practices',
-    description: 'Discuss sustainable farming practices in livestock farming.',
-    membersCount: 98,
-  },
-  {
-    id: '3',
-    name: 'Livestock Farmers Network',
-    description: 'Connect with other farmers to share insights and tips.',
-    membersCount: 150,
-  },
-  {
-    id: '4',
-    name: 'Young Farmers Association',
-    description: 'Join the community of young farmers and share experiences.',
-    membersCount: 80,
-  },
-];
-
 const Communities: React.FC = () => {
   const [newCommunityName, setNewCommunityName] = useState('');
   const [newCommunityDescription, setNewCommunityDescription] = useState('');
-  const [communities, setCommunities] = useState(communitiesData);
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+  const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [newPostContent, setNewPostContent] = useState('');
+  const [userPhone, setUserPhone] = useState('1234567890'); // Replace with actual user phone
+  const [isPostModalVisible, setIsPostModalVisible] = useState(false);
 
-  const handleCreateCommunity = () => {
-    const newCommunity: Community = {
-      id: `${communities.length + 1}`,
-      name: newCommunityName,
-      description: newCommunityDescription,
-      membersCount: 1, // New community starts with 1 member (the creator)
-    };
+  useEffect(() => {
+    fetchCommunities();
+  }, []);
 
-    setCommunities([...communities, newCommunity]);
-    setNewCommunityName('');
-    setNewCommunityDescription('');
+  const api = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  });
+  
+  // Then replace axios calls with api
+  const fetchCommunities = async () => {
+    try {
+      const response = await api.get('/forum.php');
+      console.log('Fetch Communities Response:', response.data);
+      setCommunities(response.data);
+    } catch (error) {
+      console.error('Fetch Communities Error:', error.response ? error.response.data : error.message);
+      Alert.alert('Error', 'Failed to fetch communities: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const handleCreateCommunity = async () => {
+    if (!newCommunityName || !newCommunityDescription) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/forum.php`, {
+        name: newCommunityName,
+        description: newCommunityDescription,
+        created_by: userPhone, // User's phone number
+      });
+
+      if (response.data.success) {
+        fetchCommunities();
+        setNewCommunityName('');
+        setNewCommunityDescription('');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to create community');
+    }
+  };
+
+  const handleJoinCommunity = async (forumId: string) => {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/forum.php`, {
+        forum_id: forumId,
+        user_phone: userPhone,
+      });
+
+      if (response.data.success) {
+        Alert.alert('Success', 'Joined community successfully');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to join community');
+    }
+  };
+
+  const fetchForumPosts = async (forumId: string) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/forum_post.php?forum_id=${forumId}`);
+      setPosts(response.data);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch posts');
+    }
+  };
+
+  const handleCreatePost = async () => {
+    if (!newPostContent) {
+      Alert.alert('Error', 'Post content cannot be empty');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/forum_post.php`, {
+        forum_id: selectedCommunity?.forum_id,
+        created_by: userPhone,
+        content: newPostContent,
+      });
+
+      if (response.data.success) {
+        fetchForumPosts(selectedCommunity?.forum_id || '');
+        setNewPostContent('');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to create post');
+    }
   };
 
   const renderCommunity = ({ item }: { item: Community }) => (
     <View style={styles.communityCard}>
       <Text style={styles.communityTitle}>{item.name}</Text>
       <Text style={styles.communityDescription}>{item.description}</Text>
-      <Text style={styles.communityMembers}>{item.membersCount} members</Text>
-      <TouchableOpacity style={styles.joinButton}>
-        <Ionicons name="people-outline" size={16} color={colors.white} />
-        <Text style={styles.joinButtonText}>Join</Text>
-      </TouchableOpacity>
+      <Text style={styles.communityMembers}>{item.members_count} members</Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity 
+          style={styles.joinButton} 
+          onPress={() => handleJoinCommunity(item.forum_id)}
+        >
+          <Ionicons name="people-outline" size={16} color={colors.white} />
+          <Text style={styles.joinButtonText}>Join</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.viewPostsButton} 
+          onPress={() => {
+            setSelectedCommunity(item);
+            fetchForumPosts(item.forum_id);
+            setIsPostModalVisible(true);
+          }}
+        >
+          <Ionicons name="chatbubbles-outline" size={16} color={colors.white} />
+          <Text style={styles.joinButtonText}>Posts</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderPost = ({ item }: { item: ForumPost }) => (
+    <View style={styles.postCard}>
+      <Text style={styles.postContent}>{item.content}</Text>
+      <Text style={styles.postMeta}>
+        By: {item.created_by} | {new Date(item.created_at).toLocaleString()}
+      </Text>
     </View>
   );
 
@@ -84,7 +177,7 @@ const Communities: React.FC = () => {
       <FlatList
         data={communities}
         renderItem={renderCommunity}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.forum_id}
         contentContainerStyle={styles.listContainer}
       />
 
@@ -107,6 +200,44 @@ const Communities: React.FC = () => {
           <Text style={styles.createButtonText}>Create Community</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Forum Posts Modal */}
+      <Modal
+        visible={isPostModalVisible}
+        animationType="slide"
+        onRequestClose={() => setIsPostModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{selectedCommunity?.name} Forum</Text>
+            <TouchableOpacity onPress={() => setIsPostModalVisible(false)}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={posts}
+            renderItem={renderPost}
+            keyExtractor={(item) => item.post_id}
+            ListEmptyComponent={
+              <Text>No posts yet</Text>
+            }
+          />
+
+          <View style={styles.createCommunityContainer}>
+            <TextInput
+              value={newPostContent}
+              onChangeText={setNewPostContent}
+              placeholder="Write a post..."
+              style={styles.input}
+              multiline
+            />
+            <TouchableOpacity style={styles.createButton} onPress={handleCreatePost}>
+              <Ionicons name="send" size={20} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -197,6 +328,76 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 5,
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  viewPostsButton: {
+    backgroundColor: colors.secondary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  postCard: {
+    backgroundColor: colors.background,
+    padding: 12,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    borderRadius: 8,
+  },
+  postContent: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  postMeta: {
+    fontSize: 12,
+    color: colors.grey,
+    marginTop: 5,
+  },
+  PostContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  padding: 5,
+  },
+  PostImage: {
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  marginRight: 10,
+  },
+  PostContent: {
+  flex: 1,
+  },
+  PostTitle: {
+  fontSize: 16,
+  fontWeight: 'bold',
+  color: colors.text,
+  },
+  PostDescription: {
+  fontSize: 1,
+  color: colors.grey,
+  margin: 3,
+  },
+
 });
 
 export default Communities;
