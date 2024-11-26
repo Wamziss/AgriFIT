@@ -61,18 +61,26 @@ const LivestockProfiles = () => {
 
   const handleEdit = (item) => {
     setCurrentLivestock(item);
+    setImage(item.photo ? { uri: `http://192.168.100.51/AgriFIT/${item.photo}` } : null);
     setEditMode(true);
     setModalVisible(true);
-  };
+};
 
-  const handleDelete = async (animal_id) => {
+const handleDelete = async (animal_id) => {
     try {
-      await axios.delete(`${API_BASE_URL}?animal_id=${animal_id}`);
-      fetchLivestock();
+        const response = await axios.delete(`${API_BASE_URL}?animal_id=${animal_id}`);
+        
+        if (response.data.status === 'success') {
+            Alert.alert('Success', 'Livestock profile deleted successfully');
+            fetchLivestock();
+        } else {
+            Alert.alert('Error', response.data.message || 'Failed to delete livestock profile');
+        }
     } catch (error) {
-      Alert.alert('Error', 'Failed to delete livestock profile');
+        console.error('Delete Error:', error);
+        Alert.alert('Error', 'Failed to delete livestock profile');
     }
-  };
+};
 
   return (
     <View style={styles.container}>

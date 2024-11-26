@@ -19,9 +19,8 @@ const SellProductsScreen = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [image, setImage] = useState<{ uri: string } | null>(null);
+  const [image, setImage] = useState(null);
 
-  // Fetch products when component mounts
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -66,16 +65,15 @@ const SellProductsScreen = () => {
     }
   };
 
-  const handleEdit = async (updatedProduct: { [x: string]: string | Blob; }) => {
+  const handleEdit = async (updatedProduct) => {
     try {
       const formData = new FormData();
   
       // Append all product details
       Object.keys(updatedProduct).forEach(key => {
-        if (key === 'image' && typeof updatedProduct[key] === 'object' && 'uri' in updatedProduct[key]) {
+        if (key === 'image' && updatedProduct[key] && 'uri' in updatedProduct[key]) {
           // Convert image URI to a file
-          const imageObject = updatedProduct[key] as { uri: string };
-
+          const imageObject = updatedProduct[key];
           const uriParts = imageObject.uri.split('.');
           const fileType = uriParts[uriParts.length - 1];
           
@@ -85,7 +83,7 @@ const SellProductsScreen = () => {
             name: `photo_${Date.now()}.${fileType}`,
           } as any);
         } else {
-          formData.append(key, updatedProduct[key] as string);
+          formData.append(key, updatedProduct[key]);
         }
       });      
 
@@ -110,6 +108,107 @@ const SellProductsScreen = () => {
       console.error('Error updating product:', error);
     }
   };
+  // const [modalVisible, setModalVisible] = useState(false);
+  // const [productCategory, setProductCategory] = useState('');
+  // const [subCategory, setSubCategory] = useState('');
+  // const [name, setName] = useState('');
+  // const [price, setPrice] = useState('');
+  // const [description, setDescription] = useState('');
+  // const [location, setLocation] = useState('');
+  // const [products, setProducts] = useState([]);
+  // const [loading, setLoading] = useState(false);
+  // const [refreshing, setRefreshing] = useState(false);
+  // const [image, setImage] = useState<{ uri: string } | null>(null);
+
+  // // Fetch products when component mounts
+  // useEffect(() => {
+  //   fetchProducts();
+  // }, []);
+
+  // const fetchProducts = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const sellerId = await AsyncStorage.getItem('sellerId');
+      
+  //     const response = await fetch(`${API_URL}/products.php?seller_id=${sellerId}`);
+  //     if (!response.ok) throw new Error('Network response was not ok');
+      
+  //     const data = await response.json();
+  //     setProducts(data);
+  //   } catch (error) {
+  //     Alert.alert('Error', 'Failed to fetch products');
+  //     console.error('Error fetching products:', error);
+  //   } finally {
+  //     setLoading(false);
+  //     setRefreshing(false);
+  //   }
+  // };
+
+  // const handleDelete = async (productId) => {
+  //   try {
+  //     const response = await fetch(`${API_URL}/products.php?product_id=${productId}`, {
+  //       method: 'DELETE',
+  //     });
+
+  //     const result = await response.json();
+      
+  //     if (result.success) {
+  //       Alert.alert('Success', 'Product deleted successfully');
+  //       // Update local state to remove the deleted product
+  //       setProducts(prevProducts => prevProducts.filter(product => product.product_id !== productId));
+  //     } else {
+  //       throw new Error(result.message || 'Failed to delete product');
+  //     }
+  //   } catch (error) {
+  //     Alert.alert('Error', 'Failed to delete product');
+  //     console.error('Error deleting product:', error);
+  //   }
+  // };
+
+  // const handleEdit = async (updatedProduct: { [x: string]: string | Blob; }) => {
+  //   try {
+  //     const formData = new FormData();
+  
+  //     // Append all product details
+  //     Object.keys(updatedProduct).forEach(key => {
+  //       if (key === 'image' && typeof updatedProduct[key] === 'object' && 'uri' in updatedProduct[key]) {
+  //         // Convert image URI to a file
+  //         const imageObject = updatedProduct[key] as { uri: string };
+
+  //         const uriParts = imageObject.uri.split('.');
+  //         const fileType = uriParts[uriParts.length - 1];
+          
+  //         formData.append('image', {
+  //           uri: imageObject.uri,
+  //           type: `image/${fileType}`,
+  //           name: `photo_${Date.now()}.${fileType}`,
+  //         } as any);
+  //       } else {
+  //         formData.append(key, updatedProduct[key] as string);
+  //       }
+  //     });      
+
+  //     const response = await fetch(`${API_URL}/products.php`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //       },
+  //       body: formData,
+  //     });
+  
+  //     const result = await response.json();
+  
+  //     if (result.success) {
+  //       Alert.alert('Success', 'Product updated successfully');
+  //       fetchProducts(); // Refresh product list
+  //     } else {
+  //       throw new Error(result.message || 'Failed to update product');
+  //     }
+  //   } catch (error) {
+  //     Alert.alert('Error', `Failed to update product: ${error.message}`);
+  //     console.error('Error updating product:', error);
+  //   }
+  // };
 
 
   const handleSubmit = async () => {

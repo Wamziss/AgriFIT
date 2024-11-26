@@ -17,7 +17,8 @@ const colors = {
 const LivestockItem = ({ item, onEdit, onDelete }) => (
   <View style={styles.livestockCard}>
     <Image
-      source={{ uri: item.photo || '/api/placeholder/150/150' }}
+    //   source={{ uri: item.photo || '/api/placeholder/150/150' }}
+      source={item.photo ? { uri: `http://192.168.100.51/AgriFIT/${item.photo}` } : undefined}
       style={styles.livestockImage}
     />
     <View style={styles.livestockInfo}>

@@ -2,15 +2,25 @@ import React from 'react';
 import { FlatList, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import ProductCard from './ProductCard';
 
-const ProductList = ({ products, loading, refreshing, onRefresh, onDelete, onEdit }) => {
+const ProductList = ({ 
+  products, 
+  loading, 
+  refreshing, 
+  onRefresh, 
+  onDelete, 
+  onEdit 
+}) => {
   return (
     <FlatList
       data={products}
       renderItem={({ item }) => (
-        <ProductCard 
-          product={item} 
-          onDelete={onDelete}
-          onEdit={onEdit}
+        <ProductCard
+          product={item}
+          onDelete={() => onDelete(item.product_id)}
+          onEdit={(updatedProduct) => onEdit({
+            ...updatedProduct,
+            product_id: item.product_id
+          })}
         />
       )}
       keyExtractor={(item) => item.product_id.toString()}
@@ -24,6 +34,7 @@ const ProductList = ({ products, loading, refreshing, onRefresh, onDelete, onEdi
     />
   );
 };
+
 
 const styles = StyleSheet.create({
     productList: {
