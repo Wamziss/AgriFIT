@@ -85,10 +85,10 @@ const ProductFormModal = ({
       return (
         <Picker selectedValue={subCategory} onValueChange={setSubCategory} style={styles.input}>
           <Picker.Item label="Select Sub Category" value="" />
-          <Picker.Item label="Cattle/Cows" value="Cattle/Cows" />
+          <Picker.Item label="Cattle" value="Cattle" />
           <Picker.Item label="Sheep" value="Sheep" />
           <Picker.Item label="Goats" value="Goats" />
-          <Picker.Item label="Horse" value="Horse" />
+          <Picker.Item label="Horses" value="Horses" />
           <Picker.Item label="Rabbits" value="Rabbits" />
           <Picker.Item label="Hens" value="Hens" />
           <Picker.Item label="Pigs" value="Pigs" />

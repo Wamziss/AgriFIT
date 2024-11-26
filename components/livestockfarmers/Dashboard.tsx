@@ -1,11 +1,20 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback, ReactNode } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView, Alert, RefreshControl } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import axios from 'axios';
+import { Linking } from 'react-native';
 
-type Livestock = {
+type Product = {
+  seller_id(seller_id: any): void;
+  image: string;
+  reviews_avg: ReactNode;
+  product_id: string;
+  product_price: ReactNode;
+  product_name: ReactNode; 
   id: string;
   name: string;
   price: string;
+  seller_phone?: string; 
   sellerReview: string;
   imageUrl: string;
 };
@@ -21,36 +30,114 @@ const colors = {
   lightGray: '#E0E0E0',
 };
 
-const livestockListings: Livestock[] = [
-  { id: 'l1', name: 'Cow', price: '$800', sellerReview: '4.8/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'l2', name: 'Goat', price: '$200', sellerReview: '4.5/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'l3', name: 'Sheep', price: '$250', sellerReview: '4.7/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'l4', name: 'Chicken', price: '$15', sellerReview: '4.6/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'l5', name: 'Pig', price: '$300', sellerReview: '4.4/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'l6', name: 'Bull', price: '$1000', sellerReview: '4.9/5', imageUrl: '/api/placeholder/100/100' },
-];
+const API_BASE_URL = 'http://192.168.100.51/AgriFIT/products.php';
 
 const Dashboard: React.FC = () => {
+  const [refreshing, setRefreshing] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-  const filterLivestock = (category: string) => {
-    if (category === 'All') {
-      return livestockListings;
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(API_BASE_URL, {
+        params: {
+          category: 'Livestock Related',
+        }
+      });
+      
+      setProducts(response.data);
+      console.log('Fetched products:', response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      Alert.alert('Error', 'Failed to fetch products');
+      setLoading(false);
     }
-    return livestockListings.filter(livestock => livestock.name.toLowerCase().includes(category.toLowerCase()));
   };
 
-  const renderLivestockCard = useCallback(({ item }: { item: Livestock }) => (
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchProducts();  // Reuse the same function
+  }, []);
+
+  const fetchSellerPhone = async (sellerId: string) => {
+    try {
+      const response = await axios.get(API_BASE_URL, {
+        params: {
+          get_seller_phone: 'true',
+          seller_id: sellerId
+        }
+      });
+  
+      return response.data.phone_number;
+    } catch (error) {
+      console.error('Error fetching seller phone:', error);
+      return null;
+    }
+  };
+  
+  // Modify your handleContactSeller method
+  const handleContactSeller = async (sellerId: string) => {
+    try {
+      // Fetch the seller's phone number
+      const phoneNumber = await fetchSellerPhone(sellerId);
+  
+      if (!phoneNumber) {
+        Alert.alert('Contact Error', 'Seller contact information not available');
+        return;
+      }
+  
+      Alert.alert(
+        'Contact Seller', 
+        `Call ${phoneNumber}?`, 
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Call',
+            onPress: () => {
+              // Use Linking to initiate a phone call
+              Linking.openURL(`tel:${phoneNumber}`);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error contacting seller:', error);
+      Alert.alert('Error', 'Failed to retrieve seller contact information');
+    }
+  };  
+
+  const filterProducts = (category: string) => {
+    if (category === 'All') return products;
+    return products.filter(product => 
+      product.product_name?.toLowerCase().includes(category.toLowerCase())
+    );
+  };
+
+  const renderProductCard = useCallback(({ item }: { item: Product }) => (
     <View style={styles.card}>
-      <Image source={{ uri: item.imageUrl }} style={styles.livestockImage} />
-      <Text style={styles.livestockName}>{item.name}</Text>
-      <Text style={styles.livestockPrice}>{item.price}</Text>
-      <Text style={styles.sellerReview}>★★★★★  {item.sellerReview}</Text>
+      <Image 
+        source={item.image ? { uri: `http://192.168.100.51/AgriFIT/${item.image}` } : undefined} 
+        style={styles.livestockImage} 
+      />
+      <Text style={styles.livestockName}>{item.product_name}</Text>
+      <Text style={styles.livestockPrice}>KSh {item.product_price}</Text>
+      <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text>
       <View style={styles.actions}>
         <TouchableOpacity style={styles.iconButton}>
           <Ionicons name="cart-outline" size={20} color={colors.black} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.contactButton}>
+        <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id)}
+        >
           <Ionicons name="call-outline" size={15} color={colors.white} />
           <Text style={styles.contactButtonText}>Seller</Text>
         </TouchableOpacity>
@@ -60,8 +147,9 @@ const Dashboard: React.FC = () => {
 
   return (
     <View style={styles.container}>
+    <View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
-        {['All', 'Cattle', 'Sheep', 'Goats', 'Chickens', 'Pigs'].map((category) => (
+        {['All', 'Cattle', 'Sheep', 'Goats', 'Hens', 'Pigs', 'Horses', 'Rabbits'].map((category) => (
           <TouchableOpacity
             key={category}
             onPress={() => setSelectedCategory(category)}
@@ -80,13 +168,33 @@ const Dashboard: React.FC = () => {
         ))}
       </ScrollView>
 
-      <FlatList
-        data={filterLivestock(selectedCategory)}
-        renderItem={renderLivestockCard}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.listContainer}
-      />
+      {loading ? (
+        <Text>Loading...</Text>
+      ) : (
+        <FlatList
+          data={filterProducts(selectedCategory)}
+          renderItem={renderProductCard}
+          // keyExtractor={(item) => item.product_id}
+          keyExtractor={(item, index) => {
+            if (item.product_id) return `crop-${item.product_id}`;
+            
+            // Fallback to a combination of index and some unique identifier
+            return `crop-${index}-${item.product_name}`;
+          }}
+          numColumns={2}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }
+          ListEmptyComponent={
+            <Text>No products found</Text>
+          }
+        />
+      )}
+    </View>
     </View>
   );
 };
@@ -96,12 +204,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     padding: 16,
+    justifyContent: 'flex-start'
   },
   categoryContainer: {
     flexDirection: 'row',
     marginBottom: 20,
     padding: 2,
-    minHeight: 'auto'
   },
   categoryCard: {
     paddingVertical: 3,
@@ -116,7 +224,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     height: 30,
     justifyContent: 'center',
-    marginVertical: 5
+    marginVertical: 5,
   },
   activeCategory: {
     backgroundColor: colors.black,
@@ -194,3 +302,5 @@ const styles = StyleSheet.create({
 });
 
 export default Dashboard;
+
+

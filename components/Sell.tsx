@@ -108,6 +108,119 @@ const SellProductsScreen = () => {
       console.error('Error updating product:', error);
     }
   };
+
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      
+      if (!image?.uri) {
+        Alert.alert('Error', 'Please select an image');
+        return;
+      }
+
+      const sellerId = await AsyncStorage.getItem('sellerId');
+      const formData = new FormData();
+      
+      formData.append('seller_id', sellerId ?? '0');
+      formData.append('product_name', name);
+      formData.append('product_price', price);
+      formData.append('description', description);
+      formData.append('category', productCategory);
+      formData.append('sub_category', subCategory || '');
+      formData.append('location', location);
+
+      if (image?.uri) {
+        const uriParts = image.uri.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+
+        formData.append('image', {
+          uri: image.uri,
+          type: `image/${fileType}`,
+          name: `photo_${Date.now()}.${fileType}`,
+        });
+      }
+
+      const response = await fetch(`${API_URL}/products.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        Alert.alert('Success', 'Product added successfully!');
+        resetForm();
+        fetchProducts();
+      } else {
+        throw new Error(result.message || 'Failed to add product');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add product');
+      console.error('Error adding product:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setProductCategory('');
+    setSubCategory('');
+    setName('');
+    setPrice('');
+    setDescription('');
+    setLocation('');
+    setImage(null);
+    setModalVisible(false);
+  };
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+        <Text style={styles.addButtonText}>+ ADD PRODUCT</Text>
+      </TouchableOpacity>
+
+      <ProductList
+        products={products}
+        loading={loading}
+        refreshing={refreshing}
+        onRefresh={fetchProducts}
+        onDelete={handleDelete}
+        onEdit={handleEdit}
+      />
+
+      <ProductFormModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSubmit={handleSubmit}
+        productCategory={productCategory}
+        setProductCategory={setProductCategory}
+        subCategory={subCategory}
+        setSubCategory={setSubCategory}
+        name={name}
+        setName={setName}
+        price={price}
+        setPrice={setPrice}
+        location={location}
+        setLocation={setLocation}
+        description={description}
+        setDescription={setDescription}
+        image={image}
+        setImage={setImage}
+        loading={loading}
+        isEditMode={false}
+        productData={null}
+      />
+    </View>
+  );
+};
+  
+export default SellProductsScreen;
+
+
   // const [modalVisible, setModalVisible] = useState(false);
   // const [productCategory, setProductCategory] = useState('');
   // const [subCategory, setSubCategory] = useState('');
@@ -209,120 +322,6 @@ const SellProductsScreen = () => {
   //     console.error('Error updating product:', error);
   //   }
   // };
-
-
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
-      
-      if (!image?.uri) {
-        Alert.alert('Error', 'Please select an image');
-        return;
-      }
-
-      const sellerId = await AsyncStorage.getItem('sellerId');
-      console.log('Seller ID:', sellerId);
-      const formData = new FormData();
-      
-      formData.append('seller_id', sellerId ?? '0');
-      formData.append('product_name', name);
-      formData.append('product_price', price);
-      formData.append('description', description);
-      formData.append('category', productCategory);
-      formData.append('sub_category', subCategory || '');
-      formData.append('location', location);
-
-      if (image?.uri) {
-        const uriParts = image.uri.split('.');
-        const fileType = uriParts[uriParts.length - 1];
-
-        formData.append('image', {
-          uri: image.uri,
-          type: `image/${fileType}`,
-          name: `photo_${Date.now()}.${fileType}`,
-        });
-      }
-
-      const response = await fetch(`${API_URL}/products.php`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formData,
-      });
-      console.log('Response:', response);
-
-      const result = await response.json();
-      console.log('Response from API:', result);
-      
-      if (result.status === 'success') {
-        Alert.alert('Success', 'Product added successfully!');
-        resetForm();
-        fetchProducts();
-      } else {
-        throw new Error(result.message || 'Failed to add product');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to add product');
-      console.error('Error adding product:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetForm = () => {
-    setProductCategory('');
-    setSubCategory('');
-    setName('');
-    setPrice('');
-    setDescription('');
-    setLocation('');
-    setImage(null);
-    setModalVisible(false);
-  };
-
-  return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-        <Text style={styles.addButtonText}>+ ADD PRODUCT</Text>
-      </TouchableOpacity>
-
-      <ProductList
-        products={products}
-        loading={loading}
-        refreshing={refreshing}
-        onRefresh={fetchProducts}
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-      />
-
-      <ProductFormModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleSubmit}
-        productCategory={productCategory}
-        setProductCategory={setProductCategory}
-        subCategory={subCategory}
-        setSubCategory={setSubCategory}
-        name={name}
-        setName={setName}
-        price={price}
-        setPrice={setPrice}
-        location={location}
-        setLocation={setLocation}
-        description={description}
-        setDescription={setDescription}
-        image={image}
-        setImage={setImage}
-        loading={loading}
-        isEditMode={false}
-        productData={null}
-      />
-    </View>
-  );
-};
-  
-export default SellProductsScreen;
 
 // import React, { useState, useEffect } from 'react';
 // import {

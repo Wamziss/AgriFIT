@@ -1,65 +1,166 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import React, { useState, useEffect, useCallback } from 'react'; 
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, RefreshControl } from 'react-native'; 
+import Ionicons from 'react-native-vector-icons/Ionicons'; 
+import axios from 'axios';  
+import { Linking } from 'react-native';
 
-type Product = {
-  id: string;
-  name: string;
-  price: string;
-  sellerReview: string;
-  imageUrl: string;
-};
+type Product = {   
+  image: string;   
+  reviews_avg: string;   
+  product_id: string;   
+  product_price: string;   
+  product_name: string;   
+  id: string;   
+  name: string;   
+  price: string;   
+  sellerReview: string;   
+  imageUrl: string; 
+};  
 
-const colors = {
-  primary: '#4CAF50',
-  secondary: '#8BC34A',
-  text: '#333333',
-  background: '#F1F8E9',
-  white: '#FFFFFF',
-  error: '#FF6B6B',
-  black: '#000000',
-};
+const colors = {   
+  primary: '#4CAF50',   
+  secondary: '#8BC34A',   
+  text: '#333333',   
+  background: '#F1F8E9',   
+  white: '#FFFFFF',   
+  error: '#FF6B6B',   
+  black: '#000000', 
+};  
 
-// Mock data for crop farmers' products (seedlings, etc.)
-const seedlingProducts: Product[] = [
-  { id: 's1', name: 'Tomato Seedlings', price: '$5', sellerReview: '4.8/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 's2', name: 'Maize Seedlings', price: '$4', sellerReview: '4.7/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 's3', name: 'Lettuce Seedlings', price: '$3.5', sellerReview: '4.6/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 's4', name: 'Potato Seedlings', price: '$6', sellerReview: '4.5/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 's5', name: 'Onion Seedlings', price: '$2.5', sellerReview: '4.9/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 's6', name: 'Cabbage Seedlings', price: '$3', sellerReview: '4.7/5', imageUrl: '/api/placeholder/100/100' },
-];
+const API_BASE_URL = 'http://192.168.100.51/AgriFIT/products.php';  
 
-const Dashboard: React.FC = () => {
-  const renderProductCard = useCallback(({ item }: { item: Product }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
-      <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.productPrice}>{item.price}</Text>
-      <Text style={styles.sellerReview}>★★★★★  {item.sellerReview}</Text>
-      <View style={styles.actions}>
-        <TouchableOpacity>
-          <Ionicons name='cart-outline' size={20} color={colors.black} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.contactButton}>
-          <Ionicons name='call-outline' size={15} color={colors.white} />
-          <Text style={styles.contactButtonText}>Seller</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  ), []);
+const Dashboard: React.FC = () => {   
+  const [refreshing, setRefreshing] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);   
+  const [loading, setLoading] = useState(true);    
 
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={seedlingProducts}
-        renderItem={renderProductCard}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.listContainer}
-      />
-    </View>
-  );
+  useEffect(() => {     
+    fetchProducts();   
+  }, []);    
+
+  const fetchProducts = async () => {     
+    try {       
+      setLoading(true);       
+      const response = await axios.get(API_BASE_URL, {         
+        params: {           
+          category: 'Crop Farming'         
+        }       
+      });       
+      
+      setProducts(response.data);       
+      setLoading(false);     
+    } catch (error) {       
+      console.error('Error fetching products:', error);       
+      Alert.alert('Error', 'Failed to fetch products');       
+      setLoading(false);     
+    }   
+  }; 
+  
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchProducts();  // Reuse the same function
+  }, []);
+
+  
+  const fetchSellerPhone = async (sellerId: string) => {
+    try {
+      const response = await axios.get(API_BASE_URL, {
+        params: {
+          get_seller_phone: 'true',
+          seller_id: sellerId
+        }
+      });
+  
+      return response.data.phone_number;
+    } catch (error) {
+      console.error('Error fetching seller phone:', error);
+      return null;
+    }
+  };
+  
+  // Modify your handleContactSeller method
+  const handleContactSeller = async (sellerId: string) => {
+    try {
+      // Fetch the seller's phone number
+      const phoneNumber = await fetchSellerPhone(sellerId);
+  
+      if (!phoneNumber) {
+        Alert.alert('Contact Error', 'Seller contact information not available');
+        return;
+      }
+  
+      Alert.alert(
+        'Contact Seller', 
+        `Call ${phoneNumber}?`, 
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Call',
+            onPress: () => {
+              // Use Linking to initiate a phone call
+              Linking.openURL(`tel:${phoneNumber}`);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error contacting seller:', error);
+      Alert.alert('Error', 'Failed to retrieve seller contact information');
+    }
+  };
+
+  const renderProductCard = useCallback(({ item }: { item: Product }) => (     
+    <View style={styles.card}>       
+      <Image          
+        source={item.image ? { uri: `http://192.168.100.51/AgriFIT/${item.image}` } : undefined}          
+        style={styles.productImage}        
+      />       
+      <Text style={styles.productName}>{item.product_name}</Text>       
+      <Text style={styles.productPrice}>KSh {item.product_price}</Text>       
+      <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text>       
+      <View style={styles.actions}>         
+        <TouchableOpacity>           
+          <Ionicons name='cart-outline' size={20} color={colors.black} />         
+        </TouchableOpacity>         
+        <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id)}>           
+          <Ionicons name='call-outline' size={15} color={colors.white} />           
+          <Text style={styles.contactButtonText}>Seller</Text>         
+        </TouchableOpacity>       
+      </View>     
+    </View>   
+  ), []);    
+
+  return (     
+    <View style={styles.container}>       
+      {loading ? (         
+        <Text>Loading...</Text>       
+      ) : (         
+        <FlatList           
+          data={products}           
+          renderItem={renderProductCard}           
+          keyExtractor={(item, index) => {             
+            if (item.product_id) return `crop-${item.product_id}`;                          
+            // Fallback to a combination of index and some unique identifier             
+            return `crop-${index}-${item.product_name}`;           
+          }}           
+          numColumns={2}           
+          contentContainerStyle={styles.listContainer}  
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }         
+          ListEmptyComponent={             
+            <Text>No products found</Text>           
+          }         
+        />       
+      )}     
+    </View>   
+  ); 
 };
 
 const styles = StyleSheet.create({
@@ -129,3 +230,5 @@ const styles = StyleSheet.create({
 });
 
 export default Dashboard;
+
+

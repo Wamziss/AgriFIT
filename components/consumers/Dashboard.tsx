@@ -1,8 +1,15 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback, ReactNode } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import axios from 'axios'; 
+import { Linking } from 'react-native';
 
 type Product = {
+  image: string;
+  product_name: ReactNode;
+  product_price: ReactNode;
+  reviews_avg: ReactNode;
+  product_id: string;
   id: string;
   name: string;
   price: string;
@@ -20,39 +27,109 @@ const colors = {
   black: '#000000'
 };
 
-const animalProducts: Product[] = [
-  { id: 'a1', name: 'Milk', price: '$3', sellerReview: '4.5/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'a2', name: 'Eggs', price: '$2', sellerReview: '4.7/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'a3', name: 'Cheese', price: '$4', sellerReview: '4.6/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'a4', name: 'Yogurt', price: '$2.5', sellerReview: '4.4/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'a5', name: 'Butter', price: '$3.5', sellerReview: '4.3/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'a6', name: 'Cream', price: '$2.8', sellerReview: '4.5/5', imageUrl: '/api/placeholder/100/100' },
-];
-
-const cropProduce: Product[] = [
-  { id: 'c1', name: 'Maize', price: '$5', sellerReview: '4.3/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'c2', name: 'Potatoes', price: '$4', sellerReview: '4.6/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'c3', name: 'Tomatoes', price: '$3.5', sellerReview: '4.4/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'c4', name: 'Carrots', price: '$2.5', sellerReview: '4.5/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'c5', name: 'Lettuce', price: '$2', sellerReview: '4.2/5', imageUrl: '/api/placeholder/100/100' },
-  { id: 'c6', name: 'Onions', price: '$1.5', sellerReview: '4.7/5', imageUrl: '/api/placeholder/100/100' },
-];
+const API_BASE_URL = 'http://192.168.100.51/AgriFIT/products.php';
 
 const Dashboard: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<'Animal Products' | 'Crop Produce'>('Animal Products');
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<'Animal Produce' | 'Crop Produce'>('Animal Produce');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [selectedCategory]);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(API_BASE_URL, {
+        params: {
+          category: 'Produce',
+          sub_category: selectedCategory
+        }
+      });
+      
+      setProducts(response.data);      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      Alert.alert('Error', 'Failed to fetch products');
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchProducts();  // Reuse the same function
+  }, []);
+
+  
+  const fetchSellerPhone = async (sellerId: string) => {
+    try {
+      const response = await axios.get(API_BASE_URL, {
+        params: {
+          get_seller_phone: 'true',
+          seller_id: sellerId
+        }
+      });
+  
+      return response.data.phone_number;
+    } catch (error) {
+      console.error('Error fetching seller phone:', error);
+      return null;
+    }
+  };
+  
+  // Modify your handleContactSeller method
+  const handleContactSeller = async (sellerId: string) => {
+    try {
+      // Fetch the seller's phone number
+      const phoneNumber = await fetchSellerPhone(sellerId);
+  
+      if (!phoneNumber) {
+        Alert.alert('Contact Error', 'Seller contact information not available');
+        return;
+      }
+  
+      Alert.alert(
+        'Contact Seller', 
+        `Call ${phoneNumber}?`, 
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Call',
+            onPress: () => {
+              // Use Linking to initiate a phone call
+              Linking.openURL(`tel:${phoneNumber}`);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error contacting seller:', error);
+      Alert.alert('Error', 'Failed to retrieve seller contact information');
+    }
+  };
 
   const renderProductCard = useCallback(({ item }: { item: Product }) => (
     <View style={styles.card}>
-      <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
-      <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.productPrice}>{item.price}</Text>
-      <Text style={styles.sellerReview}>★★★★★  {item.sellerReview}</Text>
+      <Image 
+        // source={{ uri: item.image || 'default_image_url' }} 
+        source={item.image ? { uri: `http://192.168.100.51/AgriFIT/${item.image}` } : undefined}
+        style={styles.productImage} 
+      />
+      <Text style={styles.productName}>{item.product_name}</Text>
+      <Text style={styles.productPrice}>KSh {item.product_price}</Text>
+      <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text>
       <View style={styles.actions}>
         <TouchableOpacity>
           <Ionicons name='cart-outline' size={20} color={colors.black} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.contactButton}>
-          <Ionicons name='call-outline' size={15} color={colors.white} /> 
+        <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id)}>
+          <Ionicons name='call-outline' size={15} color={colors.white} />
           <Text style={styles.contactButtonText}>Seller</Text>
         </TouchableOpacity>
       </View>
@@ -62,10 +139,10 @@ const Dashboard: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.switchContainer}>
-        {['Animal Products', 'Crop Produce'].map((category) => (
+        {['Animal Produce', 'Crop Produce'].map((category) => (
           <TouchableOpacity
             key={category}
-            onPress={() => setSelectedCategory(category as 'Animal Products' | 'Crop Produce')}
+            onPress={() => setSelectedCategory(category as 'Animal Produce' | 'Crop Produce')}
             style={[
               styles.switchButton,
               selectedCategory === category && styles.activeButton
@@ -81,14 +158,33 @@ const Dashboard: React.FC = () => {
         ))}
       </View>
 
-      <FlatList
-        data={selectedCategory === 'Animal Products' ? animalProducts : cropProduce}
-        renderItem={renderProductCard}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.listContainer}
-        key={selectedCategory} // Add this line
-      />
+      {loading ? (
+        <Text>Loading...</Text>
+      ) : (
+        <FlatList
+          data={products}
+          renderItem={renderProductCard}
+          // keyExtractor={(item) => item.product_id}
+          keyExtractor={(item, index) => {
+            if (item.product_id) return `crop-${item.product_id}`;
+            
+            // Fallback to a combination of index and some unique identifier
+            return `crop-${index}-${item.product_name}`;
+          }}
+          numColumns={2}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }
+          ListEmptyComponent={
+            <Text>No products found</Text>
+          }
+          key={selectedCategory}
+        />
+      )}
     </View>
   );
 };
@@ -191,3 +287,4 @@ const styles = StyleSheet.create({
 });
 
 export default Dashboard;
+
