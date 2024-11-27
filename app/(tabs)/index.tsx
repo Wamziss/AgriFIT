@@ -63,7 +63,7 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.partnerButton}>
+          <TouchableOpacity style={styles.partnerButton} onPress={() => navigation.navigate('Agencies' as never)}>
             <Text style={styles.partnerButtonText}>
               Partner with us as an  <Text style={{textTransform: 'uppercase', color: colors.primary}}>Agrobusiness/Insurance Agency</Text>
             </Text>
