@@ -33,6 +33,7 @@ type AgencyFormData = {
   category?: string;
   name: string;
   description: string;
+  specialty: string;
   email: string;
   phoneNumber: string;
   certificateFile?: any;
@@ -101,6 +102,7 @@ const Agencies: React.FC = ({ navigation }: { navigation: any }) => {
   const [formData, setFormData] = useState<AgencyFormData>({
     name: '',
     description: '',
+    specialty: '',
     email: '',
     phoneNumber: '',
     category: '',
@@ -169,6 +171,7 @@ const Agencies: React.FC = ({ navigation }: { navigation: any }) => {
 
         const response = await axios.post(`${API_BASE_URL}/veterinarians.php`, {
           name: formData.name,
+          specialty: formData.specialty,
           email: formData.email,
           phone_number: formData.phoneNumber,
           license: formData.licenseNumber
@@ -181,6 +184,7 @@ const Agencies: React.FC = ({ navigation }: { navigation: any }) => {
       setFormData({
         name: '',
         description: '',
+        specialty: '',
         email: '',
         phoneNumber: '',
         category: '',
@@ -322,12 +326,12 @@ const Agencies: React.FC = ({ navigation }: { navigation: any }) => {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Description</Text>
+                <Text style={styles.label}>Specialty</Text>
                 <TextInput
                   style={[styles.input, styles.multilineInput]}
-                  placeholder="Enter Description"
-                  value={formData.description}
-                  onChangeText={(text) => setFormData(prev => ({...prev, description: text}))}
+                  placeholder="Enter Specialty"
+                  value={formData.specialty}
+                  onChangeText={(text) => setFormData(prev => ({...prev, specialty: text}))}
                   multiline
                 />
               </View>

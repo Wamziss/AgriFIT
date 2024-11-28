@@ -1,27 +1,14 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect, ReactNode } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 
-const insuranceAgencies: Company[] = [
-  {
-    id: '1',
-    name: 'Farm Insurance Co.',
-    description: 'Providing crop and livestock insurance for all types of farmers.',
-    contact: 'info@farminsurance.com',
-  },
-  {
-    id: '2',
-    name: 'AgriShield Insurance',
-    description: 'Specializing in comprehensive agricultural insurance policies.',
-    contact: 'contact@agrishield.com',
-  },
-  {
-    id: '3',
-    name: 'RuralCover Insurance',
-    description: 'Protecting rural farmers with affordable insurance solutions.',
-    contact: 'support@ruralcover.com',
-  },
-  // Add more agencies as needed
-];
+type Company = {
+  agency_name: ReactNode;
+  business_email(business_email: any): void;
+  id: string;
+  name: string;
+  description: string;
+  contact: string;
+};
 
 const colors = {
   primary: '#4CAF50',
@@ -32,28 +19,72 @@ const colors = {
   black: '#000000',
   grey: '#888888',
   border: '#E0E0E0',
+  error: '#FF6B6B',
 };
 
+const API_BASE_URL = 'http://192.168.100.51/AgriFIT/';
+
 const Insurance = () => {
+  const [insuranceAgencies, setInsuranceAgencies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchInsuranceAgencies();
+  }, []);
+
+  const fetchInsuranceAgencies = async () => {
+    try {
+      // Replace with your actual backend endpoint
+      const response = await fetch(`${API_BASE_URL}/agencies.php`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch insurance agencies');
+      }
+      
+      const data: Company[] = await response.json();
+      setInsuranceAgencies(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setLoading(false);
+    }
+  };
+
   const handleContact = (email: string) => {
     console.log(`Contacting ${email}`);
     // You can implement email linking or other contact functionality here
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={[styles.title, { color: colors.error }]}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Insurance Agencies</Text>
-
       <FlatList
         data={insuranceAgencies}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.companyCard}>
-            <Text style={styles.companyName}>{item.name}</Text>
+            <Text style={styles.companyName}>{item.agency_name}</Text>
             <Text style={styles.companyDescription}>{item.description}</Text>
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={() => handleContact(item.contact)}
+            <TouchableOpacity 
+              style={styles.contactButton} 
+              onPress={() => handleContact(item.business_email as unknown as string)}
             >
               <Text style={styles.contactButtonText}>Contact</Text>
             </TouchableOpacity>

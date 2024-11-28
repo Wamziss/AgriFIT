@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect, ReactNode } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Star } from 'lucide-react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -15,6 +15,9 @@ const colors = {
 };
 
 type Veterinarian = {
+  vet_name: ReactNode;
+  specialty: ReactNode;
+  vet_email(vet_email: any): void;
   id: string;
   name: string;
   specialization: string;
@@ -22,73 +25,90 @@ type Veterinarian = {
   rating: number;
 };
 
-const veterinarians: Veterinarian[] = [
-  {
-    id: '1',
-    name: 'Dr. Sarah Johnson',
-    specialization: 'Large Animal Specialist',
-    contact: 'sarah.johnson@vetclinic.com',
-    rating: 4.8,
-  },
-  {
-    id: '2',
-    name: 'Dr. Michael Chen',
-    specialization: 'Poultry Expert',
-    contact: 'michael.chen@vetcare.com',
-    rating: 4.5,
-  },
-  {
-    id: '3',
-    name: 'Dr. Emily Rodriguez',
-    specialization: 'Dairy Cattle Specialist',
-    contact: 'emily.rodriguez@farmvet.com',
-    rating: 4.9,
-  },
-  {
-    id: '4',
-    name: 'Dr. James Thompson',
-    specialization: 'Equine Veterinarian',
-    contact: 'james.thompson@horsehealth.com',
-    rating: 4.7,
-  },
-  // Add more veterinarians as needed
-];
+const API_BASE_URL = 'http://192.168.100.51/AgriFIT/';
 
 const Veterinarians = () => {
+  const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchVeterinarians();
+  }, []);
+
+  const fetchVeterinarians = async () => {
+    try {
+      // Replace with your actual backend endpoint
+      const response = await fetch(`${API_BASE_URL}/veterinarians.php`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch veterinarians');
+      }
+      
+      const data: Veterinarian[] = await response.json();
+      setVeterinarians(data.map(vet => ({
+        ...vet,
+        rating: 5 // Setting all ratings to 5 as requested
+      })));
+      console.log(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setLoading(false);
+    }
+  };
+
   const handleContact = (email: string) => {
     console.log(`Contacting ${email}`);
     // You can implement email linking or other contact functionality here
   };
 
   const renderStars = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const halfStar = rating % 1 >= 0.5;
-
     return (
       <View style={styles.starContainer}>
         {[...Array(5)].map((_, i) => (
-          <Ionicons name='star' size={16} color={i < fullStars ? colors.gold : (i === fullStars && halfStar ? colors.gold : 'none')} />
+          <Ionicons
+          key={i}
+          name={i < rating ? 'star' : 'star-outline'}
+          size={20}
+          color={i < rating ? colors.gold : colors.text}
+        />
         ))}
         <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
       </View>
     );
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={[styles.title, { color: colors.error }]}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Veterinarians</Text>
-
       <FlatList
         data={veterinarians}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.vetCard}>
-            <Text style={styles.vetName}>{item.name}</Text>
-            <Text style={styles.vetSpecialization}>{item.specialization}</Text>
+            <Text style={styles.vetName}>{item.vet_name}</Text>
+            <Text style={styles.vetSpecialization}>{item.specialty}</Text>
             {renderStars(item.rating)}
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={() => handleContact(item.contact)}
+            <TouchableOpacity 
+              style={styles.contactButton} 
+              onPress={() => handleContact(item.vet_email)}
             >
               <Text style={styles.contactButtonText}>Contact</Text>
             </TouchableOpacity>

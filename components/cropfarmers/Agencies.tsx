@@ -1,5 +1,14 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+
+type Company = {
+  agency_name: ReactNode;
+  business_email(business_email: any): void;
+  id: string;
+  name: string;
+  description: string;
+  contact: string;
+};
 
 const colors = {
   primary: '#4CAF50',
@@ -9,57 +18,72 @@ const colors = {
   white: '#FFFFFF',
   error: '#FF6B6B',
   black: '#000000',
+  grey: '#888888',
 };
 
-type Company = {
-  id: string;
-  name: string;
-  description: string;
-  contact: string;
-};
-
-const agritechCompanies: Company[] = [
-  {
-    id: '1',
-    name: 'AgroTech Solutions',
-    description: 'Providing smart farming technologies for optimized crop management.',
-    contact: 'agrotech@solutions.com',
-  },
-  {
-    id: '2',
-    name: 'GreenGrow Technologies',
-    description: 'Innovative greenhouse solutions to enhance crop yields.',
-    contact: 'greengrow@tech.com',
-  },
-  {
-    id: '3',
-    name: 'FarmEase Technologies',
-    description: 'Revolutionizing rural agriculture through AI-powered analytics.',
-    contact: 'farmease@tech.com',
-  },
-  // Add more companies as needed
-];
+const API_BASE_URL = 'http://192.168.100.51/AgriFIT/';
 
 const Agencies = () => {
+  const [agritechCompanies, setAgritechCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchAgritechCompanies();
+  }, []);
+
+  const fetchAgritechCompanies = async () => {
+    try {
+      // Replace with your actual backend endpoint
+      const response = await fetch(`${API_BASE_URL}/agencies.php`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch agritech companies');
+      }
+      
+      const data: Company[] = await response.json();
+      setAgritechCompanies(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setLoading(false);
+    }
+  };
+
   const handleContact = (email: string) => {
     console.log(`Contacting ${email}`);
     // You can implement email linking or other contact functionality here
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={[styles.title, { color: colors.error }]}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>AgriTech Companies</Text>
-
       <FlatList
         data={agritechCompanies}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.companyCard}>
-            <Text style={styles.companyName}>{item.name}</Text>
+            <Text style={styles.companyName}>{item.agency_name}</Text>
             <Text style={styles.companyDescription}>{item.description}</Text>
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={() => handleContact(item.contact)}
+            <TouchableOpacity 
+              style={styles.contactButton} 
+              onPress={() => handleContact(item.business_email as unknown as string)}
             >
               <Text style={styles.contactButtonText}>Contact</Text>
             </TouchableOpacity>
