@@ -12,7 +12,7 @@ import {
 import RNPickerSelect from 'react-native-picker-select';
 import CustomHeader from './subcomponents/CustomHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useToast, ToastModal, ToastType } from './subcomponents/Toast';
+import { useToast, ToastModal, ToastType } from './subcomponents/Toast.tsx';
 
 // Color scheme (consistent with the landing page)
 const colors = {

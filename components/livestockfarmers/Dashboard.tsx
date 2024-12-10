@@ -131,7 +131,7 @@ const Dashboard: React.FC = () => {
       />
       <Text style={styles.livestockName}>{item.product_name}</Text>
       <Text style={styles.livestockPrice}>KSh {item.product_price}</Text>
-      <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text>
+      {/* <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text> */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.iconButton}>
           <Ionicons name="cart-outline" size={20} color={colors.black} />

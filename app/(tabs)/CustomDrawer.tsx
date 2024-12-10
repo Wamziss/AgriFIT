@@ -12,7 +12,7 @@ const CustomDrawer = ({ navigation, selectedProfile }) => {
     Consumer: [
       { label: 'Dashboard', action: () => navigation.navigate('ConsumerHome'), icon: 'home' },
       { label: 'Cart', action: () => navigation.navigate('Cart'), icon: 'cart' },
-      { label: 'Orders', action: () => navigation.navigate('Orders'), icon: 'clipboard' },
+      // { label: 'Orders', action: () => navigation.navigate('Orders'), icon: 'clipboard' },
       { label: 'My Products', action: () => navigation.navigate('My Products'), icon: 'pricetag' },
     ],
     'Crop Farmer': [

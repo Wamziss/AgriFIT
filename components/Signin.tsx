@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboa
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import CustomHeader from './subcomponents/CustomHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useToast, ToastModal, ToastType } from './subcomponents/Toast'; // Assuming ToastComponent is in the same directory
+import { useToast, ToastModal, ToastType } from './subcomponents/Toast.tsx'; // Assuming ToastComponent is in the same directory
 
 const colors = {
   primary: '#4CAF50',
