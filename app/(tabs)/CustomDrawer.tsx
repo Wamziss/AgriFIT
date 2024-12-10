@@ -81,10 +81,24 @@ const CustomDrawer = ({ navigation, selectedProfile }) => {
       </View>
 
       <View style={{ flex: 1 }} />
-      <TouchableOpacity onPress={() => navigation.navigate('Sell')} style={[styles.menuItem, activeItem === 'Messages' && styles.activeMenuItem]}>
-        <Ionicons name="chatbubbles" size={20} color={activeItem === 'Messages' ? '#fff' : '#333'} />
+      <TouchableOpacity
+        onPress={() => {
+          setActiveItem('Sell'); // Update the activeItem state
+          navigation.navigate('Sell'); // Navigate to the Sell screen
+        }}
+        style={[
+          styles.menuItem,
+          activeItem === 'Sell' && styles.activeMenuItem, // Apply active styling for 'Sell'
+        ]}
+      >
+        <Ionicons
+          name="add-circle"
+          size={20}
+          color={activeItem === 'Sell' ? '#fff' : '#333'}
+        />
         <Text style={[styles.menuItemText, activeItem === 'Sell' && styles.activeMenuItemText]}>Sell</Text>
       </TouchableOpacity>
+
 
       {/* <TouchableOpacity onPress={() => navigation.navigate('Messages')} style={[styles.menuItem, activeItem === 'Messages' && styles.activeMenuItem]}>
         <Ionicons name="chatbubbles" size={20} color={activeItem === 'Messages' ? '#fff' : '#333'} />

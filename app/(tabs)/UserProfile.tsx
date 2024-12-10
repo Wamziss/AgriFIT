@@ -8,7 +8,7 @@ const UserProfile = () => {
     name: '',
     email: '',
     phone: '',
-    profilePicture: null,
+    profilePicture: require('../../assets/images/user.png'),
   });
 
   // Fetch user data from AsyncStorage or API (assuming AsyncStorage here)
@@ -26,7 +26,7 @@ const UserProfile = () => {
           name: userName || 'No Name', // Fallback to 'No Name' if not found
           email: userEmail || 'No Email', // Fallback to 'No Email'
           phone: userPhone || 'No Phone', // Fallback to 'No Phone'
-          profilePicture: userProfilePic || require('../../assets/images/user.png'), // Fallback to placeholder image
+          profilePicture: userProfilePic ? { uri: userProfilePic } : require('../../assets/images/user.png'), // Fallback to placeholder image
         });
       } catch (error) {
         console.error('Error fetching user data from AsyncStorage:', error);
@@ -40,7 +40,7 @@ const UserProfile = () => {
     <View style={styles.profileContainer}>
       <TouchableOpacity style={styles.profilePicContainer}>
         <Image
-          source={userData.profilePicture} // Use the real profile picture
+          source={userData.profilePicture}
           style={styles.profilePic}
         />
         <Ionicons name="camera" size={20} color="#333" style={styles.cameraIcon} />
@@ -53,7 +53,6 @@ const UserProfile = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: 'row',

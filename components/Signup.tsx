@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import CustomHeader from './subcomponents/CustomHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useToast, ToastModal, ToastType } from './subcomponents/Toast';
 
 // Color scheme (consistent with the landing page)
 const colors = {
@@ -12,10 +22,10 @@ const colors = {
   background: '#F1F8E9',
   white: '#FFFFFF',
   error: '#FF6B6B',
-  black: '#000000'
+  black: '#000000',
 };
 
-export default function SignUpScreen({ navigation }: { navigation: any }) {
+export default function SignUpScreen({ navigation }) {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -25,67 +35,109 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
     defaultProfile: 'Consumer',
   });
 
-  const handleSignUp = async () => {
+  const { showToast, message, type, isVisible } = useToast();
 
-    const signUpData = {
-        full_name: formData.fullName,
-        email: formData.email,
-        phone_number: formData.phoneNumber,
-        password: formData.password,
-        profile_type: formData.defaultProfile,
-        profile_pic: ''
-    };
+  const validateInputs = () => {
+    const { fullName, email, phoneNumber, password, confirmPassword } = formData;
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match.");
-      return;
+    if (!fullName) {
+      showToast('Full Name is required.', ToastType.ERROR);
+      return false;
     }
-    
 
+    if (!email) {
+      showToast('Email is required.', ToastType.ERROR);
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showToast('Please enter a valid email address.', ToastType.ERROR);
+      return false;
+    }
+
+    if (!phoneNumber) {
+      showToast('Phone Number is required.', ToastType.ERROR);
+      return false;
+    }
+
+    if (!password) {
+      showToast('Password is required.', ToastType.ERROR);
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      showToast('Passwords do not match.', ToastType.ERROR);
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSignUp = async () => {
+    if (!validateInputs()) {
+      return; // Stop execution if validation fails
+    }
+  
+    const signUpData = {
+      full_name: formData.fullName,
+      email: formData.email,
+      phone_number: formData.phoneNumber,
+      password: formData.password,
+      profile_type: formData.defaultProfile,
+      profile_pic: '',
+    };
+  
     try {
       const response = await fetch('http://192.168.100.51/AgriFIT/register.php', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(signUpData),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(signUpData),
       });
   
-      console.log('Response:', response); // Log the response
-  
       if (!response.ok) {
-          throw new Error('Network response was not ok'); // Throw an error if the response is not okay
+        showToast('Please check your network connection.', ToastType.ERROR);
+        return;
       }
   
       const result = await response.json();
-      if (result.status === 'success') {
-          navigation.navigate('Dashboard');
-          await AsyncStorage.setItem('userName', result.name);
-          await AsyncStorage.setItem('userEmail', result.email);
-          await AsyncStorage.setItem('userPhone', result.phone);
-          await AsyncStorage.setItem('userProfilePic', result.profilePicture || 'default-profile-picture-url'); // You can set a default image URL or store the actual profile picture URL
-    
-          alert('Registration successful!');
-      } else {
-          alert(result.message);
-      }
-  } catch (error) {
-      console.error('Fetch error:', error); // Log the error to the console
-      alert('An error occurred. Please try again.');
-  }
+      console.log('Sign up result:', result); // Log the result for debugging
   
-};
-
+      if (result.status === 'success') {
+        // Use default values if properties are undefined
+        const fullName = result.full_name || '';
+        const email = result.email || '';
+        const phone = result.phone || '';
+        const profilePicture = result.profilePicture || 'default-profile-picture-url';
+  
+        await AsyncStorage.setItem('userName', fullName);
+        await AsyncStorage.setItem('userEmail', email);
+        await AsyncStorage.setItem('userPhone', phone);
+        await AsyncStorage.setItem('userProfilePic', profilePicture);
+  
+        showToast('Sign up successful!', ToastType.SUCCESS);
+        setTimeout(() => {
+          navigation.navigate('SignIn');
+        }, 1500);
+      } else {
+        showToast(result.message || 'Sign up failed. Please try again.', ToastType.ERROR);
+      }
+    } catch (error) {
+      console.error('Error in Sign up:', error);
+      showToast('An error occurred. Please try again.', ToastType.ERROR);
+    }
+  };
+  
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <CustomHeader navigation={navigation}/>
-
-        {/* <Text style={styles.title}>Sign Up</Text> */}
+        <CustomHeader navigation={navigation} />
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Full Name</Text>
@@ -139,7 +191,9 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Profile Type</Text>
           <RNPickerSelect
-            onValueChange={(value) => setFormData({ ...formData, defaultProfile: value })}
+            onValueChange={(value) =>
+              setFormData({ ...formData, defaultProfile: value })
+            }
             items={[
               { label: 'Consumer', value: 'Consumer' },
               { label: 'Crop Farmer', value: 'Crop Farmer' },
@@ -157,6 +211,8 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
         <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
           <Text style={styles.signinText}>Already have an account? Sign In</Text>
         </TouchableOpacity>
+
+        <ToastModal message={message} type={type} isVisible={isVisible} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -171,18 +227,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 20,
     justifyContent: 'center',
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginLeft: 5,
   },
   inputContainer: {
     marginBottom: 10,
@@ -206,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     marginTop: 10,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
