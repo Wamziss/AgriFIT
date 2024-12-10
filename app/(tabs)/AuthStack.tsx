@@ -9,6 +9,8 @@ import ForgotPasswordScreen from '../../components/subcomponents/Resetpass';
 import NewPasswordScreen from '../../components/subcomponents/Newpass';
 import AgenciesScreen from '../../components/Agencies';
 
+console.error = () => {};
+
 const Stack = createStackNavigator();
 
 const AuthStack = () => {

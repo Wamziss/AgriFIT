@@ -22,8 +22,8 @@ const colors = {
 
 const initialCartItems: CartItem[] = [
   { id: '1', name: 'Milk', price: 3, quantity: 2, imageUrl: '/api/placeholder/80/80' },
-  { id: '2', name: 'Eggs', price: 2, quantity: 1, imageUrl: '/api/placeholder/80/80' },
-  { id: '3', name: 'Cheese', price: 4, quantity: 1, imageUrl: '/api/placeholder/80/80' },
+  // { id: '2', name: 'Eggs', price: 2, quantity: 1, imageUrl: '/api/placeholder/80/80' },
+  // { id: '3', name: 'Cheese', price: 4, quantity: 1, imageUrl: '/api/placeholder/80/80' },
 ];
 
 const Cart: React.FC = () => {
