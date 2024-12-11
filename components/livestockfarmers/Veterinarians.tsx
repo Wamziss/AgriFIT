@@ -108,7 +108,7 @@ const Veterinarians = () => {
             {renderStars(item.rating)}
             <TouchableOpacity 
               style={styles.contactButton} 
-              onPress={() => handleContact(item.vet_email)}
+              onPress={() => handleContact(item.vet_email as unknown as string)}
             >
               <Text style={styles.contactButtonText}>Contact</Text>
             </TouchableOpacity>

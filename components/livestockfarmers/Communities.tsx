@@ -59,8 +59,8 @@ const Communities: React.FC = () => {
       console.log('Fetch Communities Response:', response.data);
       setCommunities(response.data);
     } catch (error) {
-      console.error('Fetch Communities Error:', error.response ? error.response.data : error.message);
-      Alert.alert('Error', 'Failed to fetch communities: ' + (error.response?.data?.message || error.message));
+      console.error('Fetch Communities Error:', error instanceof Error ? error.message : String(error));
+      Alert.alert('Error', 'Failed to fetch communities');
     }
   };
 
