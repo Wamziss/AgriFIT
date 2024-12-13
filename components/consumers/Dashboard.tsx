@@ -128,7 +128,7 @@ const Dashboard: React.FC = () => {
         <TouchableOpacity>
           <Ionicons name='cart-outline' size={20} color={colors.black} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id)}>
+        <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id as unknown as string)}>
           <Ionicons name='call-outline' size={15} color={colors.white} />
           <Text style={styles.contactButtonText}>Seller</Text>
         </TouchableOpacity>

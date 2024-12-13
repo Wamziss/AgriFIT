@@ -12,7 +12,7 @@ import {
 import RNPickerSelect from 'react-native-picker-select';
 import CustomHeader from './subcomponents/CustomHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useToast, ToastModal, ToastType } from './subcomponents/Toast.tsx';
+import { useToast, ToastModal, ToastType } from './subcomponents/Toast';
 
 // Color scheme (consistent with the landing page)
 const colors = {
@@ -25,7 +25,7 @@ const colors = {
   black: '#000000',
 };
 
-export default function SignUpScreen({ navigation }) {
+export default function SignUpScreen({ navigation }: { navigation: any }) {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',

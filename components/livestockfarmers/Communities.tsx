@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = 'http://192.168.100.51/AgriFIT/';
 
@@ -42,7 +43,21 @@ const Communities: React.FC = () => {
 
   useEffect(() => {
     fetchCommunities();
+    fetchUserPhone();
   }, []);
+
+  const fetchUserPhone = async () => {
+    try {
+      // const userPhone = await AsyncStorage.getItem('userPhone');
+      const userPhone = await AsyncStorage.getItem('userPhone');
+      console.log('user phone:', userPhone);
+      if (userPhone) {
+        setUserPhone(userPhone);
+      }
+    } catch (error) {
+      console.error('Error fetching user phone:', error);
+    }
+  };
 
   const api = axios.create({
     baseURL: API_BASE_URL,
@@ -165,7 +180,11 @@ const Communities: React.FC = () => {
     <View style={styles.postCard}>
       <Text style={styles.postContent}>{item.content}</Text>
       <Text style={styles.postMeta}>
-        By: {item.created_by} | {new Date(item.created_at).toLocaleString()}
+        {/* By: {item.created_by} | {new Date(item.created_at).toLocaleString()} */}
+        By: {item.created_by} | {new Date(item.created_at).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })}
       </Text>
     </View>
   );

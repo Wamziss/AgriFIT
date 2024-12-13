@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = 'http://192.168.100.51/AgriFIT/';
 
@@ -37,12 +38,36 @@ const Communities: React.FC = () => {
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [newPostContent, setNewPostContent] = useState('');
-  const [userPhone, setUserPhone] = useState('1234567890'); // Replace with actual user phone
+  const [userPhone, setUserPhone] = useState('012345678'); // Replace with actual user phone
   const [isPostModalVisible, setIsPostModalVisible] = useState(false);
 
   useEffect(() => {
+    const fetchUserPhone = async () => {
+      try {
+        // Fetch from AsyncStorage first
+        const userId = await AsyncStorage.getItem('sellerId');
+        console.log('User ID:', userId);
+        const userName = await AsyncStorage.getItem('userName');
+        console.log('User Name:', userName);
+        const userPhone = await AsyncStorage.getItem('userPhone');
+        console.log('user phone:', userPhone);
+  
+        // Update local state with AsyncStorage data
+        if (userPhone !== null) {
+          setUserPhone(userPhone);
+        }
+
+        // Optional: Fetch latest data from backend
+        
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserPhone();    
     fetchCommunities();
   }, []);
+
 
   const api = axios.create({
     baseURL: API_BASE_URL,
@@ -56,14 +81,19 @@ const Communities: React.FC = () => {
   const fetchCommunities = async () => {
     try {
       const response = await api.get('/cropforum.php');
-      console.log('Fetch Communities Response:', response.data);
+      console.log('Fetch Crop communities Response:', response.data);
       setCommunities(response.data);
     } catch (error) {
-      console.error('Fetch Communities Error:', error.response ? error.response.data : error.message);
-      Alert.alert('Error', 'Failed to fetch communities: ' + (error.response?.data?.message || error.message));
+      if (error instanceof Error) {
+        console.error('Fetch Communities Error:', error.message);
+        Alert.alert('Error', 'Failed to fetch communities: ' + error.message);
+      } else {
+        console.error('Fetch Communities Error:', String(error));
+        Alert.alert('Error', 'Failed to fetch communities: An unknown error occurred');
+      }
     }
-  };
 
+  };
   const handleCreateCommunity = async () => {
     if (!newCommunityName || !newCommunityDescription) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -74,7 +104,7 @@ const Communities: React.FC = () => {
       const response = await axios.post(`${API_BASE_URL}/cropforum.php`, {
         name: newCommunityName,
         description: newCommunityDescription,
-        created_by: userPhone, // User's phone number
+        created_by: userPhone,
       });
 
       if (response.data.success) {
@@ -165,7 +195,10 @@ const Communities: React.FC = () => {
     <View style={styles.postCard}>
       <Text style={styles.postContent}>{item.content}</Text>
       <Text style={styles.postMeta}>
-        By: {item.created_by} | {new Date(item.created_at).toLocaleString()}
+        By: {item.created_by} | {new Date(item.created_at).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })}
       </Text>
     </View>
   );

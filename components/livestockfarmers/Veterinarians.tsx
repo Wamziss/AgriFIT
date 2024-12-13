@@ -68,11 +68,11 @@ const Veterinarians = () => {
       <View style={styles.starContainer}>
         {[...Array(5)].map((_, i) => (
           <Ionicons
-          key={i}
-          name={i < rating ? 'star' : 'star-outline'}
-          size={20}
-          color={i < rating ? colors.gold : colors.text}
-        />
+            key={`star-${i}`}  // Use a unique key that doesn't depend on list order
+            name={i < rating ? 'star' : 'star-outline'}
+            size={20}
+            color={i < rating ? colors.gold : colors.text}
+          />
         ))}
         <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
       </View>
@@ -100,9 +100,9 @@ const Veterinarians = () => {
       <Text style={styles.title}>Veterinarians</Text>
       <FlatList
         data={veterinarians}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.vetCard}>
+        keyExtractor={(item, index) => item.id || index.toString()}
+        renderItem={({ item, index }) => (
+          <View style={styles.vetCard} key={item.id || index.toString()}>
             <Text style={styles.vetName}>{item.vet_name}</Text>
             <Text style={styles.vetSpecialization}>{item.specialty}</Text>
             {renderStars(item.rating)}

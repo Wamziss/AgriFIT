@@ -3,12 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
 import UserProfile from './UserProfile'; // Import the UserProfile component
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const CustomDrawer = ({ navigation, selectedProfile }) => {
+const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; selectedProfile: string }) => {
   const [activeItem, setActiveItem] = useState('Dashboard');
-  const [profile, setProfile] = useState('');
+  const [profile, setProfile] = useState<'Consumer' | 'Crop Farmer' | 'Livestock Farmer'>('Consumer');
 
-  const profileMenuItems = {
+  const profileMenuItems: {
+    [key in 'Consumer' | 'Crop Farmer' | 'Livestock Farmer']: Array<{
+      label: string;
+      action: () => void;
+      icon: string;
+    }>;
+  } = {
     Consumer: [
       { label: 'Dashboard', action: () => navigation.navigate('ConsumerHome'), icon: 'home' },
       { label: 'Cart', action: () => navigation.navigate('Cart'), icon: 'cart' },
@@ -35,10 +42,10 @@ const CustomDrawer = ({ navigation, selectedProfile }) => {
 
   useEffect(() => {
     // Synchronize the profile with the selectedProfile passed from props
-    setProfile(selectedProfile);
+    setProfile(selectedProfile as 'Consumer' | 'Crop Farmer' | 'Livestock Farmer');
   }, [selectedProfile]); // Runs whenever selectedProfile changes
 
-  const handleMenuItemPress = (item) => {
+  const handleMenuItemPress = (item: { label: string; action: () => void; }) => {
     setActiveItem(item.label);
     item.action();
   };
@@ -50,7 +57,7 @@ const CustomDrawer = ({ navigation, selectedProfile }) => {
         <Text style={styles.drawerHeader}>Profile:</Text>
         <Picker
           selectedValue={profile}
-          onValueChange={(value) => {
+          onValueChange={(value: 'Consumer' | 'Crop Farmer' | 'Livestock Farmer') => {
             setProfile(value);
             navigation.navigate(`${value}Home`);
           }}
@@ -105,14 +112,20 @@ const CustomDrawer = ({ navigation, selectedProfile }) => {
         <Text style={[styles.menuItemText, activeItem === 'Messages' && styles.activeMenuItemText]}>Messages</Text>
       </TouchableOpacity> */}
 
-      <TouchableOpacity onPress={() => navigation.navigate('Auth')} style={[styles.menuItem, activeItem === 'Logout' && styles.activeMenuItem]}>
+      <TouchableOpacity onPress={() => {
+            setTimeout(() => { 
+              // AsyncStorage.removeItem('userToken'),
+              navigation.navigate('Auth')
+            }, 1000);
+          }
+        } 
+        style={[styles.menuItem, activeItem === 'Logout' && styles.activeMenuItem]}>
         <Ionicons name="log-out" size={20} color={activeItem === 'Logout' ? '#fff' : '#333'} />
         <Text style={[styles.menuItemText, activeItem === 'Logout' && styles.activeMenuItemText]}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
 };
-
 
 
 

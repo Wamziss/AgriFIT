@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Keyboa
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import CustomHeader from './subcomponents/CustomHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useToast, ToastModal, ToastType } from './subcomponents/Toast.tsx'; // Assuming ToastComponent is in the same directory
+import { useToast, ToastModal, ToastType } from './subcomponents/Toast'; // Assuming ToastComponent is in the same directory
 
 const colors = {
   primary: '#4CAF50',
@@ -65,6 +65,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
       if (result.status === 'success') {
         await AsyncStorage.setItem('token', result.token);
         await AsyncStorage.setItem('profile_type', result.profile_type);
+        console.log('profile_type:', result.profile_type);
         await AsyncStorage.setItem('userName', result.user_name);
         await AsyncStorage.setItem('userEmail', result.user_email);
         await AsyncStorage.setItem('userPhone', result.user_phone);
@@ -77,7 +78,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
         // Use setTimeout to allow toast to be visible briefly before navigation
         setTimeout(() => {
           handleSignInSuccess(result.profile_type);
-        }, 1500);
+        }, 1000);
         
       } else {
         showToast(result.message || 'Sign in failed. Please try again.', ToastType.ERROR);
