@@ -89,7 +89,7 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
     };
   
     try {
-      const response = await fetch('http://192.168.100.51/AgriFIT/register.php', {
+      const response = await fetch('https://agrifit-f87fada7b265.herokuapp.com/register.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

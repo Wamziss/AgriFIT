@@ -21,7 +21,7 @@ const colors = {
   grey: '#888888',
 };
 
-const API_BASE_URL = 'http://192.168.100.51/AgriFIT/';
+const API_BASE_URL = 'https://agrifit-f87fada7b265.herokuapp.com/';
 
 const Agencies = () => {
   const [agritechCompanies, setAgritechCompanies] = useState<Company[]>([]);

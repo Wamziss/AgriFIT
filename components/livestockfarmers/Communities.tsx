@@ -4,7 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://192.168.100.51/AgriFIT/';
+const API_BASE_URL = 'https://agrifit-f87fada7b265.herokuapp.com/';
 
 type Community = {
   forum_id: string;

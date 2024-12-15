@@ -40,7 +40,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
     }
 
     try {
-      const response = await fetch('http://192.168.100.51/AgriFIT/login.php', {
+      const response = await fetch('https://agrifit-f87fada7b265.herokuapp.com/login.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailOrPhoneNumber, password })
@@ -289,7 +289,7 @@ export default SignInScreen;
 
 //   const handleSignIn = async () => {
 //     try {
-//         const response = await fetch('http://192.168.100.51/AgriFIT/login.php', {
+//         const response = await fetch('https://agrifit-f87fada7b265.herokuapp.com/login.php', {
 //             method: 'POST',
 //             headers: { 'Content-Type': 'application/json' },
 //             body: JSON.stringify({ email: emailOrPhoneNumber, password })

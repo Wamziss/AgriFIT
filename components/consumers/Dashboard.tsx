@@ -27,7 +27,7 @@ const colors = {
   black: '#000000'
 };
 
-const API_BASE_URL = 'http://192.168.100.51/AgriFIT/products.php';
+const API_BASE_URL = 'https://agrifit-f87fada7b265.herokuapp.com/products.php';
 
 const Dashboard: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -118,7 +118,7 @@ const Dashboard: React.FC = () => {
     <View style={styles.card}>
       <Image 
         // source={{ uri: item.image || 'default_image_url' }} 
-        source={item.image ? { uri: `http://192.168.100.51/AgriFIT/${item.image}` } : undefined}
+        source={item.image ? { uri: `https://agrifit-f87fada7b265.herokuapp.com/${item.image}` } : undefined}
         style={styles.productImage} 
       />
       <Text style={styles.productName}>{item.product_name}</Text>

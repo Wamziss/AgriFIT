@@ -5,7 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios'; // Make sure to install axios: npm install axios
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://192.168.100.51/AgriFIT/crop_profile.php'; // Replace with your actual backend URL
+const API_URL = 'https://agrifit-f87fada7b265.herokuapp.com/crop_profile.php'; // Replace with your actual backend URL
 
 const colors = {
   primary: '#4CAF50',
