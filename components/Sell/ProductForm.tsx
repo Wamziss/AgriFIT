@@ -135,7 +135,7 @@ const ProductFormModal = ({
 
             {image && image.uri ? (
               <Image 
-                source={image.uri ? { uri: image.uri } : require('../../assets/images/icon.png')}
+                source={image.uri ? { uri: image.uri } : require('../../assets/images/splash.png')}
                 style={styles.imagePreview} 
                 onError={(error) => console.log('Image loading error:', error)}
               />
