@@ -18,7 +18,7 @@ const LivestockItem = ({ item, onEdit, onDelete }) => (
   <View style={styles.livestockCard}>
     <Image
     //   source={{ uri: item.photo || '/api/placeholder/150/150' }}
-      source={item.photo ? { uri: `http://agrifit.42web.io/${item.photo}` } : undefined}
+      source={item.photo ? { uri: `https://agrifit-backend-production.up.railway.app/${item.photo}` } : undefined}
       style={styles.livestockImage}
     />
     <View style={styles.livestockInfo}>

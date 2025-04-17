@@ -22,7 +22,7 @@ const colors = {
   gray: '#777777',
 };
 
-const API_BASE_URL = 'http://agrifit.42web.io/register.php';
+const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/register.php';
 
 const UserProfile = () => {
   const [userData, setUserData] = useState({
@@ -90,7 +90,7 @@ const UserProfile = () => {
         email: user.email || prev.email,
         phone: user.phone_number || prev.phone,
         profilePicture: user.profile_pic 
-          ? { uri: `http://agrifit.42web.io/${user.profile_pic}` } 
+          ? { uri: `https://agrifit-backend-production.up.railway.app/${user.profile_pic}` } 
           : prev.profilePicture,
       }));
 

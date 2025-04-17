@@ -27,7 +27,7 @@ const colors = {
   black: '#000000', 
 };  
 
-const API_BASE_URL = 'http://agrifit.42web.io/products.php';  
+const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/products.php';  
 
 const Dashboard: React.FC = () => {   
   const [refreshing, setRefreshing] = useState(false);
@@ -115,7 +115,7 @@ const Dashboard: React.FC = () => {
   const renderProductCard = useCallback(({ item }: { item: Product }) => (     
     <View style={styles.card}>       
       <Image          
-        source={item.image ? { uri: `http://agrifit.42web.io/${item.image}` } : undefined}          
+        source={item.image ? { uri: `https://agrifit-backend-production.up.railway.app/${item.image}` } : undefined}          
         style={styles.productImage}        
       />       
       <Text style={styles.productName}>{item.product_name}</Text>       

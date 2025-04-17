@@ -41,7 +41,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
 
     try {
       // const response = await fetch('http://192.168.23.67/AgriFIT/login.php', {
-      const response = await fetch('http://agrifit.42web.io/login.php', {
+      const response = await fetch('https://agrifit-backend-production.up.railway.app/login.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailOrPhoneNumber, password })
@@ -292,7 +292,7 @@ export default SignInScreen;
 
 //   const handleSignIn = async () => {
 //     try {
-//         const response = await fetch('http://agrifit.42web.io/login.php', {
+//         const response = await fetch('https://agrifit-backend-production.up.railway.app/login.php', {
 //             method: 'POST',
 //             headers: { 'Content-Type': 'application/json' },
 //             body: JSON.stringify({ email: emailOrPhoneNumber, password })

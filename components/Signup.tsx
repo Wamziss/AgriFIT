@@ -90,7 +90,7 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
   
     try {
       // const response = await fetch('http://192.168.23.67/AgriFIT/register.php', {
-      const response = await fetch('http://agrifit.42web.io/register.php', {
+      const response = await fetch('https://agrifit-backend-production.up.railway.app/register.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

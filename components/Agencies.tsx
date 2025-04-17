@@ -101,7 +101,7 @@ const CategoryPickerModal: React.FC<{
   );
 };
 
-const API_BASE_URL = 'http://agrifit.42web.io/';
+const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/';
 
 const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState<'agency' | 'veterinarian'>('agency');
