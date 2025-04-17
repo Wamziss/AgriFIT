@@ -25,7 +25,7 @@ type Veterinarian = {
   rating: number;
 };
 
-const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/';
+const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app';
 
 const Veterinarians = () => {
   const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);

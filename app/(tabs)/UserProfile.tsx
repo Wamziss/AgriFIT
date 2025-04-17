@@ -61,7 +61,9 @@ const UserProfile = () => {
           name: userName || 'No Name',
           email: userEmail || 'No Email',
           phone: userPhone || 'No Phone',
-          profilePicture: userProfilePic ? { uri: userProfilePic } : require('../../assets/images/user.png'),
+          // profilePicture: userProfilePic ? { uri: userProfilePic } : require('../../assets/images/user.png'),
+          profilePicture: userProfilePic && userProfilePic !== 'null' && userProfilePic.trim() !== ''? { uri: userProfilePic } : require('../../assets/images/user.png'),
+
         }));
 
         // Optional: Fetch latest data from backend
@@ -90,7 +92,7 @@ const UserProfile = () => {
         email: user.email || prev.email,
         phone: user.phone_number || prev.phone,
         profilePicture: user.profile_pic 
-          ? { uri: `https://agrifit-backend-production.up.railway.app/${user.profile_pic}` } 
+          ? { uri: user.profile_pic} 
           : prev.profilePicture,
       }));
 
@@ -211,7 +213,8 @@ const UserProfile = () => {
       // onPress={pickImage}
       >
         <Image
-          source={userData.profilePicture}
+          // source={userData.profilePicture && userData.profilePicture.uri? userData.profilePicture : require('../../assets/images/user.png')}
+          source={require('../../assets/images/user.png')}
           style={styles.profilePic}
         />
         <Ionicons name="camera" size={20} color="#333" style={styles.cameraIcon} />
@@ -304,8 +307,8 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    borderWidth: 2,
-    borderColor: colors.primary,
+    borderWidth: 1,
+    borderColor: 'light-gray',
   },
   cameraIcon: {
     position: 'absolute',

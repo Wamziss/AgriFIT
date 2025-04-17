@@ -6,7 +6,7 @@ import ProductList from './Sell/ProductsList';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet } from 'react-native';
 
-const API_URL = 'http://192.168.100.51/AgriFIT';
+const API_URL = 'https://agrifit-backend-production.up.railway.app';
 
 const SellProductsScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -44,7 +44,7 @@ const SellProductsScreen = () => {
     }
   };
 
-  const handleDelete = async (productId) => {
+  const handleDelete = async (productId: any) => {
     try {
       const response = await fetch(`${API_URL}/products.php?product_id=${productId}`, {
         method: 'DELETE',
@@ -149,7 +149,10 @@ const SellProductsScreen = () => {
         body: formData,
       });
 
-      const result = await response.json();
+      const text = await response.text();
+
+      const result = JSON.parse(text); 
+      console.log('Parsed result:', result);
       
       if (result.status === 'success') {
         Alert.alert('Success', 'Product added successfully!');

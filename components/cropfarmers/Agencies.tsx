@@ -21,7 +21,7 @@ const colors = {
   grey: '#888888',
 };
 
-const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/';
+const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app';
 
 const Agencies = () => {
   const [agritechCompanies, setAgritechCompanies] = useState<Company[]>([]);

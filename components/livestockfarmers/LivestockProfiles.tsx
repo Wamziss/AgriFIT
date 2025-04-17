@@ -61,7 +61,7 @@ const LivestockProfiles = () => {
 
   const handleEdit = (item) => {
     setCurrentLivestock(item);
-    setImage(item.photo ? { uri: `https://agrifit-backend-production.up.railway.app/${item.photo}` } : null);
+    setImage(item.photo ? { uri: item.photo } : null);
     setEditMode(true);
     setModalVisible(true);
 };

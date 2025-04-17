@@ -22,7 +22,7 @@ const ProductCard = ({
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(
     product.image 
-      ? { uri: `https://agrifit-backend-production.up.railway.app/${product.image}` } 
+      ? { uri: product.image } 
       : null
   );
 
@@ -38,7 +38,7 @@ const ProductCard = ({
 
     if (product.image) {
       setImage({ 
-        uri: `https://agrifit-backend-production.up.railway.app/${product.image}` 
+        uri: product.image 
       });
     }
   };
@@ -73,7 +73,7 @@ const ProductCard = ({
   return (
     <View style={styles.cardContainer}>
       <Image 
-        source={product.image ? { uri: `https://agrifit-backend-production.up.railway.app/${product.image}` } : undefined}
+        source={product.image ? { uri: product.image } : undefined}
         style={styles.productImage} />
       <View style={styles.productDetails}>
         <Text style={styles.productName}>{product.product_name}</Text>

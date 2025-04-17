@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, Modal, ScrollView, Alert } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import axios from 'axios'; // Make sure to install axios: npm install axios
+import axios from 'axios'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = 'https://agrifit-backend-production.up.railway.app/crop_profile.php'; // Replace with your actual backend URL

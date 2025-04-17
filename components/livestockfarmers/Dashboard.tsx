@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
   const renderProductCard = useCallback(({ item }: { item: Product }) => (
     <View style={styles.card}>
       <Image 
-        source={item.image ? { uri: `https://agrifit-backend-production.up.railway.app/${item.image}` } : undefined} 
+        source={item.image ? { uri: item.image } : undefined} 
         style={styles.livestockImage} 
       />
       <Text style={styles.livestockName}>{item.product_name}</Text>
