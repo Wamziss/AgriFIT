@@ -22,7 +22,7 @@ const colors = {
   error: '#FF6B6B',
 };
 
-const API_BASE_URL = 'https://agrifit-f87fada7b265.herokuapp.com/';
+const API_BASE_URL = 'http://agrifit.42web.io/';
 
 const Insurance = () => {
   const [insuranceAgencies, setInsuranceAgencies] = useState<Company[]>([]);

@@ -51,7 +51,7 @@ const DashboardPages = () => {
 
   return (
     <Drawer.Navigator drawerContent={(props) => <CustomDrawer {...props} selectedProfile={userProfile} />} screenOptions={{
-        headerTitle: ()=> <CustomHeader/>,
+        headerTitle: ()=> <CustomHeader navigation={undefined}/>,
         headerTitleAlign: 'center',
         headerStyle: {
           backgroundColor: '#F1F8E9',

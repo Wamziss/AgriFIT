@@ -16,6 +16,8 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import axios from 'axios';
 import CustomHeader from './subcomponents/CustomHeader';
+import { useToast, ToastModal, ToastType } from './subcomponents/Toast'; // Assuming ToastComponent is in the same directory
+
 
 // Color Scheme
 const colors = {
@@ -40,63 +42,68 @@ type AgencyFormData = {
   licenseNumber?: string;
 };
 
-const CategoryPickerModal = ({ 
-    visible, 
-    onClose, 
-    onSelectCategory, 
-    selectedCategory 
-  }) => {
-    // Define categories
-    const categories = [
-      { id: 'insurance', name: 'Insurance' },
-      { id: 'agrobusiness', name: 'AgroBusiness' }
-    ];
-  
-    const renderItem = ({ item }: { item: { id: string; name: string } }) => (
-      <TouchableOpacity 
-        style={[
-          styles.categoryItem, 
-          selectedCategory === item.id && styles.selectedCategoryItem
-        ]}
-        onPress={() => {
-          onSelectCategory(item.id);
-          onClose();
-        }}
-      >
-        <Text style={styles.categoryItemText}>{item.name}</Text>
-      </TouchableOpacity>
-    );
-  
-    return (
-      <Modal
-        transparent={true}
-        visible={visible}
-        animationType="slide"
-        onRequestClose={onClose}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Select Category</Text>
-            <FlatList
-              data={categories}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.id}
-            />
-            <TouchableOpacity 
-              style={styles.cancelButton} 
-              onPress={onClose}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
+const CategoryPickerModal: React.FC<{
+  visible: boolean;
+  onClose: () => void;
+  onSelectCategory: (category: string) => void;
+  selectedCategory: string | null;
+}> = ({ 
+  visible, 
+  onClose, 
+  onSelectCategory, 
+  selectedCategory 
+}) => {
+  // Define categories
+  const categories = [
+    { id: 'insurance', name: 'Insurance' },
+    { id: 'agrobusiness', name: 'AgroBusiness' }
+  ];
+
+  const renderItem = ({ item }: { item: { id: string; name: string } }) => (
+    <TouchableOpacity 
+      style={[
+        styles.categoryItem, 
+        selectedCategory === item.id && styles.selectedCategoryItem
+      ]}
+      onPress={() => {
+        onSelectCategory(item.id);
+        onClose();
+      }}
+    >
+      <Text style={styles.categoryItemText}>{item.name}</Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <Modal
+      transparent={true}
+      visible={visible}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Select Category</Text>
+          <FlatList
+            data={categories}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+          />
+          <TouchableOpacity 
+            style={styles.cancelButton} 
+            onPress={onClose}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
-    );
-  };
+      </View>
+    </Modal>
+  );
+};
 
-const API_BASE_URL = 'https://agrifit-f87fada7b265.herokuapp.com/';
+const API_BASE_URL = 'http://agrifit.42web.io/';
 
-const Agencies: React.FC = ({ navigation }: { navigation: any }) => {
+const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState<'agency' | 'veterinarian'>('agency');
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
   const [formData, setFormData] = useState<AgencyFormData>({
@@ -108,7 +115,9 @@ const Agencies: React.FC = ({ navigation }: { navigation: any }) => {
     category: '',
     certificateFile: null,
     licenseNumber: ''
-  });
+  });2
+
+  const { showToast, message, type, isVisible } = useToast();
 
   const handleDocumentPick = async () => {
     try {
@@ -125,61 +134,104 @@ const Agencies: React.FC = ({ navigation }: { navigation: any }) => {
       }
     } catch (err) {
       console.error('Document pick error:', err);
-      Alert.alert('Error', 'Failed to pick document');
+      showToast('Failed to pick document', ToastType.ERROR);
+      return;
     }
   };
 
   const handleSubmit = async () => {
     try {
-      const formDataToSubmit = new FormData();
-      
       if (activeTab === 'agency') {
         // Validate agency form
-        if (!formData.category || !formData.name || !formData.email || !formData.phoneNumber || !formData.certificateFile) {
-          Alert.alert('Validation Error', 'Please fill in all required fields');
+        if (!formData.category) {
+          showToast('Please select a category', ToastType.ERROR);
           return;
         }
-
+        if (!formData.name) {
+          showToast('Please enter agency name', ToastType.ERROR);
+          return;
+        }
+        if (!formData.email) {
+          showToast('Please enter business email', ToastType.ERROR);
+          return;
+        }
+        if (!formData.phoneNumber) {
+          showToast('Please enter phone number', ToastType.ERROR);
+          return;
+        }
+        if (!formData.certificateFile) {
+          showToast('Please upload business registration certificate', ToastType.ERROR);
+          return;
+        }
+  
+        const formDataToSubmit = new FormData();
+        
         // Append agency data
         formDataToSubmit.append('category', formData.category);
         formDataToSubmit.append('agency_name', formData.name);
-        formDataToSubmit.append('description', formData.description);
+        formDataToSubmit.append('description', formData.description || '');
         formDataToSubmit.append('business_email', formData.email);
         formDataToSubmit.append('phone_number', formData.phoneNumber);
-        if (formData.certificateFile) {
-          formDataToSubmit.append('business_certificate', {
-            uri: formData.certificateFile.uri,
-            type: formData.certificateFile.mimeType,
-            name: formData.certificateFile.name
-          } as any);
-        }
-
         
-        const response = await axios.post(`${API_BASE_URL}/agencies.php`, formDataToSubmit, {
+        if (formData.certificateFile) {
+          const fileData = {
+            uri: formData.certificateFile.uri,
+            type: formData.certificateFile.mimeType || 'application/octet-stream',
+            name: formData.certificateFile.name || 'certificate'
+          };
+          formDataToSubmit.append('business_certificate', fileData as any);
+        }
+  
+        console.log('Submitting Agency Data:', Object.fromEntries(formDataToSubmit as any));
+  
+        const response = await axios.post(`${API_BASE_URL}agencies.php`, formDataToSubmit, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
-
-        Alert.alert('Success', 'Agency registered successfully');
-      } else {
+  
+        console.log('Agency Submission Response:', response.data);
+        showToast("You've successfully registered. Check your email for the next steps.", ToastType.SUCCESS); 
+  
+      } else if (activeTab === 'veterinarian') {
         // Validate veterinarian form
-        if (!formData.name || !formData.email || !formData.phoneNumber || !formData.licenseNumber) {
-          Alert.alert('Validation Error', 'Please fill in all required fields');
+        if (!formData.name) {
+          showToast('Please enter veterinarian name', ToastType.ERROR);
           return;
         }
-
-        const response = await axios.post(`${API_BASE_URL}/veterinarians.php`, {
+        if (!formData.specialty) {
+          showToast('Please enter specialty', ToastType.ERROR);
+          return;
+        }
+        if (!formData.email) {
+          showToast('Please enter email', ToastType.ERROR);
+          return;
+        }
+        if (!formData.phoneNumber) {
+          showToast('Please enter phone number', ToastType.ERROR);
+          return;
+        }
+        if (!formData.licenseNumber) {
+          showToast('Please enter license number', ToastType.ERROR);
+          return;
+        }
+  
+        const veterinarianData = {
           name: formData.name,
           specialty: formData.specialty,
           email: formData.email,
           phone_number: formData.phoneNumber,
           license: formData.licenseNumber
-        });
-
-        Alert.alert('Success', 'Veterinarian registered successfully');
+        };
+  
+        console.log('Submitting Veterinarian Data:', veterinarianData);
+  
+        const response = await axios.post(`${API_BASE_URL}veterinarians.php`, veterinarianData);
+  
+        console.log('Veterinarian Submission Response:', response.data);
+        showToast("You've successfully registered. Check your email for the next steps.", ToastType.SUCCESS);
       }
-
+  
       // Reset form after successful submission
       setFormData({
         name: '',
@@ -191,10 +243,26 @@ const Agencies: React.FC = ({ navigation }: { navigation: any }) => {
         certificateFile: null,
         licenseNumber: ''
       });
-
-    } catch (error) {
-      console.error('Submission error:', error);
-      Alert.alert('Error', 'Failed to submit registration');
+  
+    } catch (error: any) {
+      console.error('Submission error details:', error);
+      
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        console.error('Server Response Error:', error.response.data);
+        console.error('Status Code:', error.response.status);
+        console.error('Response Headers:', error.response.headers);
+        
+        showToast(`Submission failed: ${error.response.data?.message || 'Server error'}`, ToastType.ERROR);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+        showToast('No response from server. Please check your network connection.', ToastType.ERROR);
+      } else {
+        // Something happened in setting up the request
+        console.error('Error setting up request:', error.message);
+        showToast(`Submission error: ${error.message}`, ToastType.ERROR);
+      }
     }
   };
 
@@ -377,6 +445,12 @@ const Agencies: React.FC = ({ navigation }: { navigation: any }) => {
             <Text style={styles.buttonText}>Submit Registration</Text>
           </TouchableOpacity>
         </View>
+
+        <ToastModal 
+          message={message}
+          type={type}
+          isVisible={isVisible}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

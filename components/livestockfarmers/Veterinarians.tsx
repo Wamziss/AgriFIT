@@ -25,7 +25,7 @@ type Veterinarian = {
   rating: number;
 };
 
-const API_BASE_URL = 'https://agrifit-f87fada7b265.herokuapp.com/';
+const API_BASE_URL = 'http://agrifit.42web.io/';
 
 const Veterinarians = () => {
   const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);

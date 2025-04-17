@@ -13,7 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://agrifit-f87fada7b265.herokuapp.com/livestock_profile.php';
+const API_BASE_URL = 'http://agrifit.42web.io/livestock_profile.php';
 
 const colors = {
   primary: '#4CAF50',

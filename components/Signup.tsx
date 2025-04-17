@@ -76,7 +76,7 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
 
   const handleSignUp = async () => {
     if (!validateInputs()) {
-      return; // Stop execution if validation fails
+      return;
     }
   
     const signUpData = {
@@ -89,13 +89,16 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
     };
   
     try {
-      const response = await fetch('https://agrifit-f87fada7b265.herokuapp.com/register.php', {
+      // const response = await fetch('http://192.168.23.67/AgriFIT/register.php', {
+      const response = await fetch('http://agrifit.42web.io/register.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(signUpData),
       });
+      console.log('Response:', response);
+      console.log('Response status:', response.status);
   
       if (!response.ok) {
         showToast('Please check your network connection.', ToastType.ERROR);
@@ -103,10 +106,11 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
       }
   
       const result = await response.json();
-      console.log('Sign up result:', result); // Log the result for debugging
+
+      console.log('Sign up result:', result);
   
       if (result.status === 'success') {
-        // Use default values if properties are undefined
+
         const fullName = result.full_name || '';
         const email = result.email || '';
         const phone = result.phone || '';
@@ -129,7 +133,7 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
       showToast('An error occurred. Please try again.', ToastType.ERROR);
     }
   };
-  
+
 
   return (
     <KeyboardAvoidingView
@@ -188,21 +192,25 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
           />
         </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Profile Type</Text>
-          <RNPickerSelect
-            onValueChange={(value) =>
-              setFormData({ ...formData, defaultProfile: value })
-            }
-            items={[
-              { label: 'Consumer', value: 'Consumer' },
-              { label: 'Crop Farmer', value: 'Crop Farmer' },
-              { label: 'Livestock Farmer', value: 'Livestock Farmer' },
-            ]}
-            style={pickerSelectStyles}
-            value={formData.defaultProfile}
-          />
-        </View>
+<View style={styles.inputContainer}>
+  <Text style={styles.label}>Profile Type</Text>
+  <RNPickerSelect
+    onValueChange={(value) => 
+      setFormData({ ...formData, defaultProfile: value })
+    }
+    items={[
+      { label: 'Consumer', value: 'Consumer' },
+      { label: 'Crop Farmer', value: 'Crop Farmer' },
+      { label: 'Livestock Farmer', value: 'Livestock Farmer' },
+    ]}
+    style={{
+      inputIOS: styles.input,
+      inputAndroid: styles.input,
+    }}
+    value={formData.defaultProfile}
+    useNativeAndroidPickerStyle={false}
+  />
+</View>
 
         <TouchableOpacity style={styles.button} onPress={handleSignUp}>
           <Text style={styles.buttonText}>Sign Up</Text>
@@ -212,14 +220,12 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
           <Text style={styles.signinText}>Already have an account? Sign In</Text>
         </TouchableOpacity>
 
-        <ToastModal message={message} type={type} isVisible={isVisible} />
+        {isVisible && <ToastModal message={message} type={type} isVisible={isVisible} />}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
+const styles = StyleSheet.create({  container: {
     flex: 1,
     backgroundColor: colors.background,
   },

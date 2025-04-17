@@ -5,7 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons'; // Move styles to a s
 import LivestockItem from './LivestockProfile/LivestockItem'; // Render livestock items
 import LivestockForm from './LivestockProfile/LivestockForm'; // Manage add/edit forms
 
-const API_BASE_URL = 'https://agrifit-f87fada7b265.herokuapp.com/livestock_profile.php';
+const API_BASE_URL = 'http://agrifit.42web.io/livestock_profile.php';
 
 const colors = {
   primary: '#4CAF50',
@@ -61,7 +61,7 @@ const LivestockProfiles = () => {
 
   const handleEdit = (item) => {
     setCurrentLivestock(item);
-    setImage(item.photo ? { uri: `https://agrifit-f87fada7b265.herokuapp.com/${item.photo}` } : null);
+    setImage(item.photo ? { uri: `http://agrifit.42web.io/${item.photo}` } : null);
     setEditMode(true);
     setModalVisible(true);
 };

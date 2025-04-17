@@ -40,13 +40,15 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
     }
 
     try {
-      const response = await fetch('https://agrifit-f87fada7b265.herokuapp.com/login.php', {
+      // const response = await fetch('http://192.168.23.67/AgriFIT/login.php', {
+      const response = await fetch('http://agrifit.42web.io/login.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailOrPhoneNumber, password })
       });
 
       if (!response.ok) {
+        console.log("Network response was not ok:", response);
         showToast('Please check your network connection.', ToastType.ERROR);
         return;
       }
@@ -88,6 +90,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
       showToast('An error occurred. Please try again.', ToastType.ERROR);
     }
   };
+
 
   return (
     <KeyboardAvoidingView 
@@ -289,7 +292,7 @@ export default SignInScreen;
 
 //   const handleSignIn = async () => {
 //     try {
-//         const response = await fetch('https://agrifit-f87fada7b265.herokuapp.com/login.php', {
+//         const response = await fetch('http://agrifit.42web.io/login.php', {
 //             method: 'POST',
 //             headers: { 'Content-Type': 'application/json' },
 //             body: JSON.stringify({ email: emailOrPhoneNumber, password })
