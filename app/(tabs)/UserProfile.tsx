@@ -144,10 +144,6 @@ const UserProfile = ({ navigation }) => {
           }));
 
           // Update AsyncStorage to ensure data persists on next app load
-
-
-
-
           const updates: [string, string][] = [
             ['userName', userData.full_name || ''],
             ['userEmail', userData.email || ''],
@@ -199,7 +195,6 @@ const UserProfile = ({ navigation }) => {
       // Don't show alert here to avoid annoying the user if backend fetch fails
       // We'll still show any data we got from AsyncStorage
     }
-
   };
   // Image Picker and Upload
   const pickImage = async () => {
