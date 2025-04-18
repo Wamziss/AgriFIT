@@ -74,6 +74,8 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
         const userid = String(result.user_id);
         await AsyncStorage.setItem('sellerId', userid);
 
+        console.log(result.token);
+
         // Show success toast before navigating
         showToast('Sign in successful!', ToastType.SUCCESS);
         

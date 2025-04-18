@@ -89,4 +89,4 @@ const DashboardPages = () => {
   )
 }
 
-export default DashboardPages
+export default DashboardPages;

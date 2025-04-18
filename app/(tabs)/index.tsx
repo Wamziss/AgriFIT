@@ -85,7 +85,7 @@ export default function HomeScreen() {
             style={styles.buttonGradient}
           >
             <FontAwesome name="sign-in" size={24} color={colors.white} />
-            <Text style={styles.mainActionButtonText}>Sign In</Text>
+            <Text style={styles.mainActionButtonText}>Sign In with Email</Text>
           </LinearGradient>
         </TouchableOpacity>
 
