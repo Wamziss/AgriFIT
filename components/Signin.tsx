@@ -112,6 +112,7 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
               onChangeText={setEmailOrPhoneNumber}
               autoComplete="email"
               keyboardType="email-address" 
+              textContentType="emailAddress"
             />
           </View>
 
@@ -123,7 +124,8 @@ const SignInScreen = ({ navigation }: { navigation: any }) => {
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
-                autoComplete='password'
+                autoComplete="password"
+                textContentType="password"
               />
               <TouchableOpacity style={styles.eyeIcon} onPress={togglePasswordVisibility}>
                 <Ionicons name={showPassword ? "eye-off" : "eye"} size={24} color={colors.primary} />

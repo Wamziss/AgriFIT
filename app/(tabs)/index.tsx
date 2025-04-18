@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import React, { useState, useEffect, useRef, } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TouchableWithoutFeedback, Animated, } from 'react-native';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -20,6 +20,7 @@ const { width } = Dimensions.get('window');
 export default function HomeScreen() {
   const navigation = useNavigation();
   const [slideIndex, setSlideIndex] = useState(0);
+  const scale = useRef(new Animated.Value(0.98)).current;
 
   const slides = [
     "Easily find farmers close to you",
@@ -27,11 +28,29 @@ export default function HomeScreen() {
     "Get Connected to Agrobusiness and insurance agencies"
   ];
 
+
   useEffect(() => {
     const interval = setInterval(() => {
       setSlideIndex((prevIndex) => (prevIndex + 1) % slides.length);
     }, 3000);
     return () => clearInterval(interval);
+  }, []);
+
+    useEffect(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scale, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 0.98,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
   }, []);
 
   return (
@@ -66,25 +85,22 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        
-        <TouchableOpacity 
-          style={styles.partnerButton} 
-          onPress={() => navigation.navigate('Agencies' as never)}
-        >
-          <Text style={styles.partnerButtonText}>
-            Partner with us as an  <Text style={{textTransform: 'uppercase', color: colors.primary}}>Agrobusiness/Insurance Agency</Text>
-          </Text>
-        </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={() => navigation.navigate('Agencies' as never)}>
+              <Animated.View style={[styles.partnerButton, { transform: [{ scale }] }]}>
+                <Text style={styles.partnerButtonText}>Partner with AgriFIT as an: </Text>
+                <Text style={styles.partnerButtonTextMain}>Agrobusiness/Insurance Agency</Text>
+              </Animated.View>
+            </TouchableWithoutFeedback>
 
         <TouchableOpacity 
           style={styles.mainActionButton} 
           onPress={() => navigation.navigate('SignIn' as never)}
         >
           <LinearGradient
-            colors={[colors.primary, colors.accent]}
+            colors={['#333', colors.black]}
             style={styles.buttonGradient}
           >
-            <FontAwesome name="sign-in" size={24} color={colors.white} />
+            <FontAwesome name='envelope' size={18} color={colors.white} />
             <Text style={styles.mainActionButtonText}>Sign In with Email</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -189,25 +205,27 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   partnerButton: {
-    backgroundColor: colors.white,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    borderRadius: 25,
-    borderWidth: 2,
+    paddingVertical: 10,
     marginVertical: 15,
     alignItems: 'center',
-    borderColor: colors.black,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
+
   partnerButtonText: {
     color: colors.black,
     fontSize: 18,
     fontWeight: 'bold',
   },
+  partnerButtonTextMain: {
+    color: colors.primary,
+    fontSize: 18,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    paddingTop: 4,
+    paddingBottom: 2,
+    borderBottomWidth: 1.3,
+    borderColor: colors.primary,
+  },
+
   signupContainer: {
     marginTop: 20,
   },

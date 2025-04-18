@@ -114,7 +114,7 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
 
       <TouchableOpacity onPress={() => {
             setTimeout(() => { 
-              // AsyncStorage.removeItem('userToken'),
+              AsyncStorage.removeItem('token'),
               navigation.navigate('Auth')
             }, 1000);
           }

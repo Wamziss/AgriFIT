@@ -13,6 +13,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import CustomHeader from './subcomponents/CustomHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useToast, ToastModal, ToastType } from './subcomponents/Toast';
+import { Picker } from '@react-native-picker/picker';
 
 // Color scheme (consistent with the landing page)
 const colors = {
@@ -32,7 +33,7 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
     phoneNumber: '',
     password: '',
     confirmPassword: '',
-    defaultProfile: 'Consumer',
+    defaultProfile: '',
   });
 
   const { showToast, message, type, isVisible } = useToast();
@@ -149,6 +150,8 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
             style={styles.input}
             value={formData.fullName}
             onChangeText={(text) => setFormData({ ...formData, fullName: text })}
+            autoComplete="name"
+            textContentType="name"
           />
         </View>
 
@@ -159,6 +162,8 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
             keyboardType="email-address"
             value={formData.email}
             onChangeText={(text) => setFormData({ ...formData, email: text })}
+            autoComplete="email"
+            textContentType="emailAddress"
           />
         </View>
 
@@ -169,6 +174,8 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
             keyboardType="phone-pad"
             value={formData.phoneNumber}
             onChangeText={(text) => setFormData({ ...formData, phoneNumber: text })}
+            autoComplete="tel"
+            textContentType="telephoneNumber"
           />
         </View>
 
@@ -179,6 +186,8 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
             secureTextEntry
             value={formData.password}
             onChangeText={(text) => setFormData({ ...formData, password: text })}
+            autoComplete="password-new"        
+            textContentType="newPassword"
           />
         </View>
 
@@ -189,28 +198,24 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
             secureTextEntry
             value={formData.confirmPassword}
             onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+            autoComplete="password-new"
+            textContentType="newPassword"
           />
         </View>
 
-<View style={styles.inputContainer}>
-  <Text style={styles.label}>Profile Type</Text>
-  <RNPickerSelect
-    onValueChange={(value) => 
-      setFormData({ ...formData, defaultProfile: value })
-    }
-    items={[
-      { label: 'Consumer', value: 'Consumer' },
-      { label: 'Crop Farmer', value: 'Crop Farmer' },
-      { label: 'Livestock Farmer', value: 'Livestock Farmer' },
-    ]}
-    style={{
-      inputIOS: styles.input,
-      inputAndroid: styles.input,
-    }}
-    value={formData.defaultProfile}
-    useNativeAndroidPickerStyle={false}
-  />
-</View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Profile Type</Text>
+          <Picker
+            selectedValue={formData.defaultProfile}
+            onValueChange={(value) => setFormData({ ...formData, defaultProfile: value })}
+            style={styles.pickerInput}
+            placeholder='Select...'
+          >
+            <Picker.Item label="Consumer" value="Consumer" />
+            <Picker.Item label="Crop Farmer" value="Crop Farmer" />
+            <Picker.Item label="Livestock Farmer" value="Livestock Farmer" />
+          </Picker>
+        </View>
 
         <TouchableOpacity style={styles.button} onPress={handleSignUp}>
           <Text style={styles.buttonText}>Sign Up</Text>
@@ -250,6 +255,9 @@ const styles = StyleSheet.create({  container: {
     fontSize: 16,
     backgroundColor: colors.white,
   },
+  pickerInput: {
+    backgroundColor: colors.white,
+  },
   button: {
     backgroundColor: colors.black,
     padding: 15,
@@ -275,30 +283,5 @@ const styles = StyleSheet.create({  container: {
     color: colors.primary,
     marginTop: 20,
     fontSize: 16,
-  },
-});
-
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: colors.secondary,
-    borderRadius: 5,
-    color: colors.text,
-    paddingRight: 30,
-    backgroundColor: colors.white,
-  },
-  inputAndroid: {
-    fontSize: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: colors.secondary,
-    borderRadius: 5,
-    color: colors.text,
-    paddingRight: 30,
-    backgroundColor: colors.white,
   },
 });
