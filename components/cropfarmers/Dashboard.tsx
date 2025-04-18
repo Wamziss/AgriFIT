@@ -6,7 +6,7 @@ import { Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Product = { 
-  seller_id(seller_id: any): void;  
+  seller_id: string
   image: string;   
   reviews_avg: string;   
   product_id: string;   
@@ -134,6 +134,7 @@ const Dashboard: React.FC = () => {
   };
 
   const addToCart = async (productId: string) => {
+    console.log('token', token)
     if (!token) {
       Alert.alert('Authentication Required', 'Please log in to add items to your cart');
       return;
@@ -170,7 +171,7 @@ const Dashboard: React.FC = () => {
       <View style={styles.productDetails}>
         <Text style={styles.productName}>{item.product_name}</Text>       
         <Text style={styles.productPrice}>KSh {item.product_price}</Text>       
-        {/* <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text>        */}
+        {/* <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text> */}
         <View style={styles.actions}>         
           <TouchableOpacity 
             onPress={() => addToCart(item.product_id)}
@@ -178,7 +179,7 @@ const Dashboard: React.FC = () => {
             style={styles.cartButton}
           >
             {addingToCart === item.product_id ? (
-              <ActivityIndicator size="small" color={colors.white} />
+              <ActivityIndicator size="small" color={colors.white}/>
             ) : (
               <>
                 <Ionicons name='cart-outline' size={16} color={colors.text} />
@@ -186,8 +187,9 @@ const Dashboard: React.FC = () => {
               </>
             )}
           </TouchableOpacity>       
-          <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id?.toString())}>                       <Ionicons name='call-outline' size={15} color={colors.white} />           
-            <Text style={styles.contactButtonText}>Contact seller</Text>         
+          <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id as unknown as string)}>  
+            <Ionicons name='call-outline' size={15} color={colors.white} />         
+            <Text style={styles.contactButtonText}>Contact seller</Text>      
           </TouchableOpacity>       
         </View>  
       </View>   
@@ -313,5 +315,3 @@ const styles = StyleSheet.create({
 });
 
 export default Dashboard;
-
-
