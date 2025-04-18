@@ -50,7 +50,9 @@ const DashboardPages = () => {
   }, []);
 
   return (
-    <Drawer.Navigator drawerContent={(props) => <CustomDrawer {...props} selectedProfile={userProfile} />} screenOptions={{
+    <Drawer.Navigator 
+      drawerContent={(props) => <CustomDrawer {...props} selectedProfile={userProfile} />} 
+      screenOptions={{
         headerTitle: ()=> <CustomHeader navigation={undefined}/>,
         headerTitleAlign: 'center',
         headerStyle: {
@@ -59,7 +61,8 @@ const DashboardPages = () => {
         headerLeftContainerStyle: {
           paddingLeft: 5,
         },
-      }}>
+      }}
+      >
         {/* Dashboard Screens */}
         <Drawer.Screen name="ConsumerHome" component={ConsumerHomeScreen} />
         <Drawer.Screen name="Crop FarmerHome" component={CropFarmerHomeScreen} />

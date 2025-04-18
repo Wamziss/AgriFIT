@@ -50,7 +50,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
       try {
         const storedToken = await AsyncStorage.getItem('token');
         setToken(storedToken);
-        console.log('Token refreshed on focus:', storedToken ? 'Token exists' : 'No token');
+        // console.log('Token refreshed on focus:', storedToken ? 'Token exists' : 'No token');
       } catch (error) {
         console.error('Error retrieving token:', error);
       }
@@ -147,7 +147,6 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
   const fetchLatestUserData = async (userId: string) => {
     try {
       const response = await axios.get(`${API_BASE_URL}?user_id=${userId}`);
-      console.log('token:', token);
       console.log('Backend response:', response.data);
       
       // Check if response is an array (which seems to be the case from your logs)
@@ -245,7 +244,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
           uri: selectedImage.uri,
           type: 'image/jpeg',
           name: 'profile.jpg',
-        });
+        } as any);
         formData.append('full_name', userData.name);
         formData.append('email', userData.email);
         formData.append('phone_number', userData.phone);
@@ -276,8 +275,8 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
       console.error('Image upload error:', error);
       Alert.alert('Error', 'Failed to upload profile picture');
     }
-  };
-  
+
+  };  
   // Edit Profile
   const handleEditProfile = async () => {
     try {

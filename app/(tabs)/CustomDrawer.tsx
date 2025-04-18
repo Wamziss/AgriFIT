@@ -58,7 +58,7 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
 
   return (
     <View style={styles.drawerContent}>
-      <UserProfile />
+      <UserProfile navigation={undefined} />
       <View style={styles.profileContainer}>
         <Text style={styles.drawerHeader}>Profile:</Text>
         <Picker

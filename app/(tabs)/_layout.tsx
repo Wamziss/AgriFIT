@@ -11,18 +11,24 @@ const Stack = createStackNavigator();
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
+  const [initialProfile, setInitialProfile] = useState('Consumer');
 
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
         const profile = await AsyncStorage.getItem('profile_type');
+        console.log('Profile:', profile);
         
-        if (token && profile) {
+        if (token) {
           // Optionally: validate token expiry here (advanced)
           setInitialRoute('Dashboard');
         } else {
           setInitialRoute('Auth');
+        }
+
+        if (profile) {
+          setInitialProfile(profile);
         }
       } catch (err) {
         console.error('Error checking login status:', err);
@@ -45,7 +51,7 @@ export default function App() {
   return (
       <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
         <Stack.Screen name="Auth" component={AuthStack} />
-        <Stack.Screen name="Dashboard" component={Dashboard} />
+        <Stack.Screen name="Dashboard" component={Dashboard} initialProfile={`${initialProfile}Home`} />
       </Stack.Navigator>
   );
 }

@@ -152,29 +152,53 @@ const Dashboard: React.FC = () => {
   };
 
   const addToCart = async (productId: string) => {
-    
-    if (!token) {
-      Alert.alert('Authentication Required', 'Please log in to add items to your cart');
-      return;
-    }
-
     try {
       setAddingToCart(productId);
+      
+      // Get the most up-to-date token directly from AsyncStorage
+      const currentToken = await AsyncStorage.getItem('token');
+      
+      if (!currentToken) {
+        Alert.alert('Authentication Required', 'Please log in to add items to your cart');
+        // Optionally redirect to login
+        // navigation.navigate('SignIn');
+        return;
+      }
       
       const response = await axios.post(
         CART_API_URL,
         { product_id: productId, quantity: 1 },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${currentToken}` } }
       );
       
       if (response.data.status === 'success') {
         Alert.alert('Success', 'Item added to cart');
       } else {
-        Alert.alert('Error', 'Failed to add item to cart');
+        // Handle specific error cases
+        if (response.data.message && response.data.message.includes('auth')) {
+          // Reauth required
+          Alert.alert('Session Expired', 'Your session has expired. Please login again.');
+          // Clear token and redirect to login
+          await AsyncStorage.removeItem('token');
+          navigation.navigate('SignIn' as never);
+        } else {
+          Alert.alert('Error', response.data.message || 'Failed to add item to cart');
+        }
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      Alert.alert('Error', 'Failed to add item to cart');
+      
+      // Check for authentication errors in the response
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 401) {
+          Alert.alert('Authentication Error', 'Your session has expired. Please login again.');
+          await AsyncStorage.removeItem('token');
+          navigation.navigate('SignIn' as never);
+          return;
+        }
+      }
+      
+      Alert.alert('Error', 'Failed to add item to cart. Please try again.');
     } finally {
       setAddingToCart(null);
     }
