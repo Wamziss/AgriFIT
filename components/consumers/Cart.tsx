@@ -13,6 +13,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 type CartItem = {
   id: string;
@@ -63,6 +64,15 @@ const Cart: React.FC = () => {
     
     getToken();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (token) {
+        fetchCartItems(token);
+      }
+      return () => {}; // cleanup if needed
+    }, [token])
+  );
 
   // Fetch cart items from the API
   const fetchCartItems = async (authToken: string) => {

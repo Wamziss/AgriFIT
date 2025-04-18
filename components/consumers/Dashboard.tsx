@@ -141,6 +141,7 @@ const Dashboard: React.FC = () => {
   };
 
   const addToCart = async (productId: string) => {
+    console.log('token', token)
     if (!token) {
       Alert.alert('Authentication Required', 'Please log in to add items to your cart');
       return;

@@ -49,12 +49,12 @@ const UserProfile = ({ navigation }) => {
         
         // Check if user is still authenticated
         const token = await AsyncStorage.getItem('token');
-        console.log('Current auth token:', token ? 'Token exists' : 'Token missing');
+        // console.log('Current auth token:', token ? 'Token exists' : 'Token missing');
         
         if (!token) {
-          console.log('User not authenticated, redirecting to login');
+          // console.log('User not authenticated, redirecting to login');
           // Optional: Redirect to login
-          // navigation.navigate('SignIn');
+          navigation.navigate('SignIn');
           return;
         }
         
@@ -65,7 +65,7 @@ const UserProfile = ({ navigation }) => {
         // Convert results to an object for easier access
         const storedData = Object.fromEntries(results);
         
-        console.log('Retrieved from AsyncStorage:', JSON.stringify(storedData, null, 2));
+        // console.log('Retrieved from AsyncStorage:', JSON.stringify(storedData, null, 2));
         
         const userId = storedData['sellerId'];
         const userName = storedData['userName'];
@@ -75,7 +75,7 @@ const UserProfile = ({ navigation }) => {
         
         // Update local state with AsyncStorage data if available
         if (userId) {
-          console.log('Setting user data from AsyncStorage');
+          // console.log('Setting user data from AsyncStorage');
           setUserData(prev => ({
             ...prev,
             user_id: userId,
@@ -117,11 +117,11 @@ const UserProfile = ({ navigation }) => {
   // Fetch latest user data from backend
   const fetchLatestUserData = async (userId) => {
     try {
-      console.log('Fetching latest data from backend for user:', userId);
+      // console.log('Fetching latest data from backend for user:', userId);
       
       // You might need to modify your backend to support fetching a single user by ID
       const response = await axios.get(`${API_BASE_URL}?user_id=${userId}`);
-      console.log('Backend response:', response.data);
+      // console.log('Backend response:', response.data);
       
       // Check if response is an array (which seems to be the case from your logs)
       if (Array.isArray(response.data)) {
@@ -129,7 +129,7 @@ const UserProfile = ({ navigation }) => {
         const userIdNum = parseInt(userId, 10);
         const userData = response.data.find(user => parseInt(user.user_id, 10) === userIdNum);
         
-        console.log('Found user in array:', userData);
+        // console.log('Found user in array:', userData);
         
         if (userData) {
           // Update local state with backend data
@@ -155,7 +155,7 @@ const UserProfile = ({ navigation }) => {
           }
           
           await AsyncStorage.multiSet(updates);
-          console.log('Updated AsyncStorage with backend data:', updates);
+          // console.log('Updated AsyncStorage with backend data:', updates);
         } else {
           console.log('User not found in response array');
         }
@@ -186,9 +186,9 @@ const UserProfile = ({ navigation }) => {
         }
         
         await AsyncStorage.multiSet(updates);
-        console.log('Updated AsyncStorage with backend data');
+        // console.log('Updated AsyncStorage with backend data');
       } else {
-        console.log('Backend response does not contain user data in expected format');
+        // console.log('Backend response does not contain user data in expected format');
       }
     } catch (error) {
       console.error('Error fetching latest user data:', error);
@@ -259,7 +259,7 @@ const UserProfile = ({ navigation }) => {
       formData.append('email', editedUserData.email);
       formData.append('phone_number', editedUserData.phone);
 
-      console.log('Form Data:', formData);
+      // console.log('Form Data:', formData);
 
       // Send update request to backend
       const response = await axios.post(API_BASE_URL, formData, {

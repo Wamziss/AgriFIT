@@ -27,12 +27,13 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
       { label: 'My Products', action: () => navigation.navigate('My Products'), icon: 'pricetag' },
     ],
     'Crop Farmer': [
-      { label: 'Dashboard', action: () => navigation.navigate('Crop FarmerHome'), icon: 'home' },
+      { label: 'Dashboard', action: () => navigation.navigate('Crop FarmerHome'), icon: 'home' },  
       { label: 'Communities', action: () => navigation.navigate('Crop Communities'), icon: 'people' },
       { label: 'My Crops Manager', action: () => navigation.navigate('Crops Manager'), icon: 'leaf' },
       { label: 'AgriTech Companies', action: () => navigation.navigate('AgriTech Companies'), icon: 'business' },
       { label: 'Insurance Agencies', action: () => navigation.navigate('Crop Insurance'), icon: 'shield-checkmark' },
       { label: 'Pest Control Guides', action: () => navigation.navigate('Pest Guides'), icon: 'bug' },
+      { label: 'Cart', action: () => navigation.navigate('Cart'), icon: 'cart' },
     ],
     'Livestock Farmer': [
       { label: 'Dashboard', action: () => navigation.navigate('Livestock FarmerHome'), icon: 'home' },
@@ -41,6 +42,7 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
       { label: 'Veterinarians', action: () => navigation.navigate('Veterinarians'), icon: 'medkit' },
       { label: 'Insurance Agencies', action: () => navigation.navigate('Livestock Insurance'), icon: 'shield-checkmark' },
       { label: 'Livestock Care Guides', action: () => navigation.navigate('CareGuides'), icon: 'book' },
+      { label: 'Cart', action: () => navigation.navigate('Cart'), icon: 'cart' },
     ],
   };
 

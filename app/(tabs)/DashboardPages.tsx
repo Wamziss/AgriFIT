@@ -70,12 +70,14 @@ const DashboardPages = () => {
         <Drawer.Screen name="My Products" component={MyProductsScreen} />
         
         {/* Crop Farmers */}
+        <Drawer.Screen name="cfCart" component={MyCartScreen} />
         <Drawer.Screen name="Crop Communities" component={CropCommunityScreen} />
         <Drawer.Screen name="Crops Manager" component={CropsManagerScreen} />
         <Drawer.Screen name="AgriTech Companies" component={AgenciesScreen} />
         <Drawer.Screen name="Crop Insurance" component={CropInsuranceScreen} />
         <Drawer.Screen name="Pest Guides" component={PestGuidesScreen} />
         {/* Livestock Farmers */}
+        <Drawer.Screen name="lfCart" component={MyCartScreen} />
         <Drawer.Screen name="Livestock Communities" component={LivestockCommunityScreen} />
         <Drawer.Screen name="Livestock Profiles" component={LivestockProfilesScreen} />
         <Drawer.Screen name="Veterinarians" component={VeterinariansScreen} />
