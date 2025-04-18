@@ -4,6 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import { Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 type Product = {
   seller_id(seller_id: any): void;
@@ -41,6 +42,7 @@ const Dashboard: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [token, setToken] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null); // Store productId being added
+  const navigation = useNavigation();
 
     // Get token on component mount
     useEffect(() => {
@@ -48,14 +50,21 @@ const Dashboard: React.FC = () => {
         try {
           const storedToken = await AsyncStorage.getItem('token');
           setToken(storedToken);
-  
+          // console.log('Token refreshed on focus:', storedToken ? 'Token exists' : 'No token');
         } catch (error) {
           console.error('Error retrieving token:', error);
         }
       };
       
-      getToken();
-    }, []);
+      getToken(); // Initial load
+      
+      // Add a listener to refresh token when Dashboard comes into focus
+      const unsubscribe = navigation?.addListener('focus', () => {
+        getToken();
+      });
+      
+      return unsubscribe;
+    }, [navigation]);
 
   useEffect(() => {
     fetchProducts();
@@ -71,7 +80,7 @@ const Dashboard: React.FC = () => {
       });
       
       setProducts(response.data);
-      console.log('Fetched products:', response.data);
+      // console.log('Fetched products:', response.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -143,6 +152,7 @@ const Dashboard: React.FC = () => {
   };
 
   const addToCart = async (productId: string) => {
+    
     if (!token) {
       Alert.alert('Authentication Required', 'Please log in to add items to your cart');
       return;

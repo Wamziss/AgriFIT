@@ -13,6 +13,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 const colors = {
   primary: '#4CAF50',
@@ -24,12 +25,13 @@ const colors = {
 
 const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/register.php';
 
-const UserProfile = ({ navigation }) => {
+const UserProfile = ({ navigation }: { navigation: any }) => {
   const [userData, setUserData] = useState({
     user_id: '',
     name: '',
     email: '',
     phone: '',
+    profileType: '',
     profilePicture: require('../../assets/images/user.png'),
   });
   
@@ -39,7 +41,30 @@ const UserProfile = ({ navigation }) => {
     name: '',
     email: '',
     phone: '',
+    profileType: '',
   });
+  const [token, setToken] = useState<string | null>(null);
+    
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        setToken(storedToken);
+        console.log('Token refreshed on focus:', storedToken ? 'Token exists' : 'No token');
+      } catch (error) {
+        console.error('Error retrieving token:', error);
+      }
+    };
+    
+    getToken(); // Initial load
+    
+    // Add a listener to refresh token when Dashboard comes into focus
+    const unsubscribe = navigation?.addListener('focus', () => {
+      getToken();
+    });
+    
+    return unsubscribe;
+  }, [navigation]);
 
   // Fetch user data from AsyncStorage and potentially refresh from backend
   useEffect(() => {
@@ -59,8 +84,9 @@ const UserProfile = ({ navigation }) => {
         }
         
         // Fetch all user data at once to improve efficiency
-        const keys = ['sellerId', 'userName', 'userEmail', 'userPhone', 'userProfilePic'];
+        const keys = ['sellerId', 'userName', 'userEmail', 'userPhone', 'userProfilePic', 'profile_type'];
         const results = await AsyncStorage.multiGet(keys);
+        // console.log('Retrieved from AsyncStorage:', JSON.stringify(results, null, 2));
         
         // Convert results to an object for easier access
         const storedData = Object.fromEntries(results);
@@ -72,6 +98,7 @@ const UserProfile = ({ navigation }) => {
         const userEmail = storedData['userEmail'];
         const userPhone = storedData['userPhone'];
         const userProfilePic = storedData['userProfilePic'];
+        const userProfileType = storedData['userType'];
         
         // Update local state with AsyncStorage data if available
         if (userId) {
@@ -82,10 +109,12 @@ const UserProfile = ({ navigation }) => {
             name: userName || prev.name,
             email: userEmail || prev.email,
             phone: userPhone || prev.phone,
+            profileType: userProfileType || prev.profileType,
             profilePicture: userProfilePic && userProfilePic !== 'null' && userProfilePic.trim() !== '' && userProfilePic !== 'default-profile-picture-url'
               ? { uri: userProfilePic } 
               : require('../../assets/images/user.png'),
           }));
+          // console.log('Updated user data from AsyncStorage:', userData);
         } else {
           console.log('No user ID in AsyncStorage');
         }
@@ -115,13 +144,11 @@ const UserProfile = ({ navigation }) => {
   }, [navigation]);
 
   // Fetch latest user data from backend
-  const fetchLatestUserData = async (userId) => {
+  const fetchLatestUserData = async (userId: string) => {
     try {
-      // console.log('Fetching latest data from backend for user:', userId);
-      
-      // You might need to modify your backend to support fetching a single user by ID
       const response = await axios.get(`${API_BASE_URL}?user_id=${userId}`);
-      // console.log('Backend response:', response.data);
+      console.log('token:', token);
+      console.log('Backend response:', response.data);
       
       // Check if response is an array (which seems to be the case from your logs)
       if (Array.isArray(response.data)) {
@@ -138,6 +165,7 @@ const UserProfile = ({ navigation }) => {
             name: userData.full_name || prev.name,
             email: userData.email || prev.email,
             phone: userData.phone_number || prev.phone,
+            profileType: userData.profile_type || prev.profileType,
             profilePicture: userData.profile_pic 
               ? { uri: userData.profile_pic} 
               : prev.profilePicture,
@@ -148,6 +176,7 @@ const UserProfile = ({ navigation }) => {
             ['userName', userData.full_name || ''],
             ['userEmail', userData.email || ''],
             ['userPhone', userData.phone_number || ''],
+            ['userType', userData.profile_type || ''],
           ];
           
           if (userData.profile_pic) {
@@ -322,6 +351,7 @@ const UserProfile = ({ navigation }) => {
                   name: userData.name || '',
                   email: userData.email || '',
                   phone: userData.phone || '',
+                  profileType: userData.profileType || '',
                 });
               }}>
                 <Ionicons name="pencil" size={20} color={colors.primary} />
@@ -385,7 +415,6 @@ const UserProfile = ({ navigation }) => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: 'row',
