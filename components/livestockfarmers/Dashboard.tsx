@@ -129,18 +129,20 @@ const Dashboard: React.FC = () => {
         source={item.image ? { uri: item.image } : undefined} 
         style={styles.livestockImage} 
       />
-      <Text style={styles.livestockName}>{item.product_name}</Text>
-      <Text style={styles.livestockPrice}>KSh {item.product_price}</Text>
-      {/* <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text> */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="cart-outline" size={20} color={colors.black} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id as unknown as string)}>
+      <View style={styles.livestockDetails}>
+        <Text style={styles.livestockName}>{item.product_name}</Text>
+        <Text style={styles.livestockPrice}>KSh {item.product_price}</Text>
+        {/* <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text> */}
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="cart-outline" size={20} color={colors.black} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id as unknown as string)}>
         
-          <Ionicons name="call-outline" size={15} color={colors.white} />
-          <Text style={styles.contactButtonText}>Seller</Text>
-        </TouchableOpacity>
+            <Ionicons name="call-outline" size={15} color={colors.white} />
+            <Text style={styles.contactButtonText}>Seller</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   ), []);
@@ -246,18 +248,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     margin: 8,
     borderRadius: 15,
-    padding: 16,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
+
   livestockImage: {
     width: '100%',
-    height: 120,
+    height: 150,
     borderRadius: 10,
-    marginBottom: 12,
+  },
+  livestockDetails: {
+    padding: 16,
   },
   livestockName: {
     fontSize: 18,

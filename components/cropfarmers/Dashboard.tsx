@@ -118,18 +118,20 @@ const Dashboard: React.FC = () => {
         source={item.image ? { uri: item.image } : undefined}          
         style={styles.productImage}        
       />       
-      <Text style={styles.productName}>{item.product_name}</Text>       
-      <Text style={styles.productPrice}>KSh {item.product_price}</Text>       
-      {/* <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text>        */}
-      <View style={styles.actions}>         
-        <TouchableOpacity>           
-          <Ionicons name='cart-outline' size={20} color={colors.black} />         
-        </TouchableOpacity>         
-        <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id)}>           
-          <Ionicons name='call-outline' size={15} color={colors.white} />           
-          <Text style={styles.contactButtonText}>Seller</Text>         
-        </TouchableOpacity>       
-      </View>     
+      <View style={styles.productDetails}>
+        <Text style={styles.productName}>{item.product_name}</Text>       
+        <Text style={styles.productPrice}>KSh {item.product_price}</Text>       
+        {/* <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text>        */}
+        <View style={styles.actions}>         
+          <TouchableOpacity>           
+            <Ionicons name='cart-outline' size={20} color={colors.black} />         
+          </TouchableOpacity>         
+          <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id)}>           
+            <Ionicons name='call-outline' size={15} color={colors.white} />           
+            <Text style={styles.contactButtonText}>Seller</Text>         
+          </TouchableOpacity>       
+        </View>  
+      </View>   
     </View>   
   ), []);    
 
@@ -178,7 +180,6 @@ const styles = StyleSheet.create({
     margin: 8,
     marginHorizontal: 5,
     borderRadius: 10,
-    padding: 16,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -187,9 +188,11 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: '100%',
-    height: 100,
+    height: 150,
     borderRadius: 10,
-    marginBottom: 12,
+  },
+  productDetails: {
+    padding: 16,
   },
   productName: {
     fontSize: 18,

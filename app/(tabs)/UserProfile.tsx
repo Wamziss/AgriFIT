@@ -24,7 +24,7 @@ const colors = {
 
 const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/register.php';
 
-const UserProfile = () => {
+const UserProfile = ({ navigation }) => {
   const [userData, setUserData] = useState({
     user_id: '',
     name: '',
@@ -32,7 +32,8 @@ const UserProfile = () => {
     phone: '',
     profilePicture: require('../../assets/images/user.png'),
   });
-
+  
+  const [isLoading, setIsLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [editedUserData, setEditedUserData] = useState({
     name: '',
@@ -44,67 +45,161 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Fetch from AsyncStorage first
-        const userId = await AsyncStorage.getItem('sellerId');
-        console.log('User ID:', userId);
-        const userName = await AsyncStorage.getItem('userName');
-        console.log('User Name:', userName);
-        const userEmail = await AsyncStorage.getItem('userEmail');
-        const userPhone = await AsyncStorage.getItem('userPhone');
-        console.log('user phone:', userPhone);
-        const userProfilePic = await AsyncStorage.getItem('userProfilePic');
+        setIsLoading(true);
+        
+        // Check if user is still authenticated
+        const token = await AsyncStorage.getItem('token');
+        console.log('Current auth token:', token ? 'Token exists' : 'Token missing');
+        
+        if (!token) {
+          console.log('User not authenticated, redirecting to login');
+          // Optional: Redirect to login
+          // navigation.navigate('SignIn');
+          return;
+        }
+        
+        // Fetch all user data at once to improve efficiency
+        const keys = ['sellerId', 'userName', 'userEmail', 'userPhone', 'userProfilePic'];
+        const results = await AsyncStorage.multiGet(keys);
+        
+        // Convert results to an object for easier access
+        const storedData = Object.fromEntries(results);
+        
+        console.log('Retrieved from AsyncStorage:', JSON.stringify(storedData, null, 2));
+        
+        const userId = storedData['sellerId'];
+        const userName = storedData['userName'];
+        const userEmail = storedData['userEmail'];
+        const userPhone = storedData['userPhone'];
+        const userProfilePic = storedData['userProfilePic'];
+        
+        // Update local state with AsyncStorage data if available
+        if (userId) {
+          console.log('Setting user data from AsyncStorage');
+          setUserData(prev => ({
+            ...prev,
+            user_id: userId,
+            name: userName || prev.name,
+            email: userEmail || prev.email,
+            phone: userPhone || prev.phone,
+            profilePicture: userProfilePic && userProfilePic !== 'null' && userProfilePic.trim() !== '' && userProfilePic !== 'default-profile-picture-url'
+              ? { uri: userProfilePic } 
+              : require('../../assets/images/user.png'),
+          }));
+        } else {
+          console.log('No user ID in AsyncStorage');
+        }
 
-        // Update local state with AsyncStorage data
-        setUserData(prev => ({
-          ...prev,
-          user_id: userId || '',
-          name: userName || 'No Name',
-          email: userEmail || 'No Email',
-          phone: userPhone || 'No Phone',
-          // profilePicture: userProfilePic ? { uri: userProfilePic } : require('../../assets/images/user.png'),
-          profilePicture: userProfilePic && userProfilePic !== 'null' && userProfilePic.trim() !== ''? { uri: userProfilePic } : require('../../assets/images/user.png'),
-
-        }));
-
-        // Optional: Fetch latest data from backend
+        // Always fetch latest data from backend when available
         if (userId) {
           await fetchLatestUserData(userId);
+        } else {
+          console.log('No user ID available for backend fetch');
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
+        Alert.alert('Error', 'Failed to load profile data. Please try again.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchUserData();
-  }, []);
+    
+    // Set up event listener for when app returns from background
+    const unsubscribe = navigation?.addListener('focus', () => {
+      fetchUserData();
+    });
+    
+    return unsubscribe;
+  }, [navigation]);
 
   // Fetch latest user data from backend
-  const fetchLatestUserData = async (userId: string) => {
+  const fetchLatestUserData = async (userId) => {
     try {
+      console.log('Fetching latest data from backend for user:', userId);
+      
       // You might need to modify your backend to support fetching a single user by ID
       const response = await axios.get(`${API_BASE_URL}?user_id=${userId}`);
-      const user = response.data;
+      console.log('Backend response:', response.data);
+      
+      // Check if response is an array (which seems to be the case from your logs)
+      if (Array.isArray(response.data)) {
+        // Find the user in the array that matches our user ID
+        const userIdNum = parseInt(userId, 10);
+        const userData = response.data.find(user => parseInt(user.user_id, 10) === userIdNum);
+        
+        console.log('Found user in array:', userData);
+        
+        if (userData) {
+          // Update local state with backend data
+          setUserData(prev => ({
+            ...prev,
+            name: userData.full_name || prev.name,
+            email: userData.email || prev.email,
+            phone: userData.phone_number || prev.phone,
+            profilePicture: userData.profile_pic 
+              ? { uri: userData.profile_pic} 
+              : prev.profilePicture,
+          }));
 
-      // Update local state and AsyncStorage with backend data
-      setUserData(prev => ({
-        ...prev,
-        name: user.full_name || prev.name,
-        email: user.email || prev.email,
-        phone: user.phone_number || prev.phone,
-        profilePicture: user.profile_pic 
-          ? { uri: user.profile_pic} 
-          : prev.profilePicture,
-      }));
+          // Update AsyncStorage to ensure data persists on next app load
 
-      // Update AsyncStorage
-      await AsyncStorage.multiSet([
-        ['userName', user.full_name || userData.name],
-        ['userEmail', user.email || userData.email],
-        ['userPhone', user.phone_number || userData.phone],
-      ]);
+
+
+
+          const updates: [string, string][] = [
+            ['userName', userData.full_name || ''],
+            ['userEmail', userData.email || ''],
+            ['userPhone', userData.phone_number || ''],
+          ];
+          
+          if (userData.profile_pic) {
+            updates.push(['userProfilePic', userData.profile_pic]);
+          }
+          
+          await AsyncStorage.multiSet(updates);
+          console.log('Updated AsyncStorage with backend data:', updates);
+        } else {
+          console.log('User not found in response array');
+        }
+      } else if (response.data && (response.data.full_name || response.data.email || response.data.phone_number)) {
+        // Original code for handling single object response
+        const user = response.data;
+
+        // Update local state with backend data
+        setUserData(prev => ({
+          ...prev,
+          name: user.full_name || prev.name,
+          email: user.email || prev.email,
+          phone: user.phone_number || prev.phone,
+          profilePicture: user.profile_pic 
+            ? { uri: user.profile_pic} 
+            : prev.profilePicture,
+        }));
+
+        // Update AsyncStorage to ensure data persists on next app load
+        const updates: [string, string][] = [
+          ['userName', user.full_name || ''],
+          ['userEmail', user.email || ''],
+          ['userPhone', user.phone_number || ''],
+        ];
+        
+        if (user.profile_pic) {
+          updates.push(['userProfilePic', user.profile_pic]);
+        }
+        
+        await AsyncStorage.multiSet(updates);
+        console.log('Updated AsyncStorage with backend data');
+      } else {
+        console.log('Backend response does not contain user data in expected format');
+      }
     } catch (error) {
       console.error('Error fetching latest user data:', error);
+      // Don't show alert here to avoid annoying the user if backend fetch fails
+      // We'll still show any data we got from AsyncStorage
     }
+
   };
   // Image Picker and Upload
   const pickImage = async () => {
@@ -126,7 +221,7 @@ const UserProfile = () => {
           uri: selectedImage.uri,
           type: 'image/jpeg',
           name: 'profile.jpg',
-        } as any);
+        });
         formData.append('full_name', userData.name);
         formData.append('email', userData.email);
         formData.append('phone_number', userData.phone);
@@ -158,6 +253,7 @@ const UserProfile = () => {
       Alert.alert('Error', 'Failed to upload profile picture');
     }
   };
+  
   // Edit Profile
   const handleEditProfile = async () => {
     try {
@@ -208,36 +304,39 @@ const UserProfile = () => {
 
   return (
     <View style={styles.profileContainer}>
-      {/* Profile Picture with Edit Icon */}
-      <TouchableOpacity style={styles.profilePicContainer} 
-      // onPress={pickImage}
-      >
-        <Image
-          // source={userData.profilePicture && userData.profilePicture.uri? userData.profilePicture : require('../../assets/images/user.png')}
-          source={require('../../assets/images/user.png')}
-          style={styles.profilePic}
-        />
-        <Ionicons name="camera" size={20} color="#333" style={styles.cameraIcon} />
-      </TouchableOpacity>
+      {isLoading ? (
+        <Text style={styles.loadingText}>Loading profile data...</Text>
+      ) : (
+        <>
+          {/* Profile Picture with Edit Icon */}
+          <TouchableOpacity style={styles.profilePicContainer} onPress={pickImage}>
+            <Image
+              source={userData.profilePicture || require('../../assets/images/user.png')}
+              style={styles.profilePic}
+            />
+            <Ionicons name="camera" size={20} color="#333" style={styles.cameraIcon} />
+          </TouchableOpacity>
 
-      {/* User Info */}
-      <View style={styles.userInfoContainer}>
-        <View style={styles.userInfoHeader}>
-          <Text style={styles.userName}>{userData.name}</Text>
-          {/* <TouchableOpacity onPress={() => {
-            setEditMode(true);
-            setEditedUserData({
-              name: userData.name,
-              email: userData.email,
-              phone: userData.phone,
-            });
-          }}>
-            <Ionicons name="pencil" size={20} color={colors.primary} />
-          </TouchableOpacity> */}
-        </View>
-        <Text style={styles.userDetail}>{userData.email}</Text>
-        <Text style={styles.userDetail}>{userData.phone}</Text>
-      </View>
+          {/* User Info */}
+          <View style={styles.userInfoContainer}>
+            <View style={styles.userInfoHeader}>
+              <Text style={styles.userName}>{userData.name || 'No Name'}</Text>
+              <TouchableOpacity onPress={() => {
+                setEditMode(true);
+                setEditedUserData({
+                  name: userData.name || '',
+                  email: userData.email || '',
+                  phone: userData.phone || '',
+                });
+              }}>
+                <Ionicons name="pencil" size={20} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.userDetail}>{userData.email || 'No Email'}</Text>
+            <Text style={styles.userDetail}>{userData.phone || 'No Phone'}</Text>
+          </View>
+        </>
+      )}
 
       {/* Edit Profile Modal */}
       <Modal
@@ -297,7 +396,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
-    // backgroundColor: colors.background,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.text,
+    marginTop: 20,
   },
   profilePicContainer: {
     position: 'relative',
@@ -395,70 +498,3 @@ const styles = StyleSheet.create({
 });
 
 export default UserProfile;
-
-
-
-// import React from 'react';
-// import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-// import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
-// const profilePicture = require('../../assets/images/user.png'); // Replace with actual profile picture'
-
-// const UserProfile = () => {
-
-//   return (
-//     <View style={styles.profileContainer}>
-//       <TouchableOpacity style={styles.profilePicContainer}>
-//         <Image
-//           source={profilePicture} // Replace with actual profile picture URL
-//           style={styles.profilePic}
-//         />
-//         <Ionicons name="camera" size={20} color="#333" style={styles.cameraIcon} />
-//       </TouchableOpacity>
-//       <View style={styles.userInfo}>
-//         <Text style={styles.userName}>Hannah M</Text>
-//         <Text style={styles.userDetail}>hannah@example.com</Text>
-//         <Text style={styles.userDetail}>0745678899</Text>
-//       </View>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   profileContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   profilePicContainer: {
-//     position: 'relative',
-//     marginRight: 15,
-//   },
-//   profilePic: {
-//     width: 60,
-//     height: 60,
-//     borderRadius: 30,
-//     borderWidth: 1,
-//     borderColor: 'gray',
-//   },
-//   cameraIcon: {
-//     position: 'absolute',
-//     bottom: 0,
-//     right: 0,
-//     backgroundColor: '#fff',
-//     borderRadius: 10,
-//     padding: 2,
-//   },
-//   userInfo: {
-//     justifyContent: 'center',
-//   },
-//   userName: {
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//     color: '#333',
-//   },
-//   userDetail: {
-//     fontSize: 14,
-//     color: '#777',
-//   },
-// });
-
-// export default UserProfile;

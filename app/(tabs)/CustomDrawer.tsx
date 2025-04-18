@@ -4,10 +4,14 @@ import { Picker } from '@react-native-picker/picker';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
 import UserProfile from './UserProfile'; // Import the UserProfile component
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ActivityIndicator } from 'react-native';
+
 
 const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; selectedProfile: string }) => {
   const [activeItem, setActiveItem] = useState('Dashboard');
   const [profile, setProfile] = useState<'Consumer' | 'Crop Farmer' | 'Livestock Farmer'>('Consumer');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
 
   const profileMenuItems: {
     [key in 'Consumer' | 'Crop Farmer' | 'Livestock Farmer']: Array<{
@@ -112,18 +116,35 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
         <Text style={[styles.menuItemText, activeItem === 'Messages' && styles.activeMenuItemText]}>Messages</Text>
       </TouchableOpacity> */}
 
-      <TouchableOpacity onPress={() => {
-            setTimeout(() => { 
-              AsyncStorage.removeItem('token'),
-              navigation.navigate('Auth')
-            }, 1000);
-          }
-        } 
+      <TouchableOpacity 
+      onPress={() => {
+        setIsLoggingOut(true); // start loading
+        setTimeout(() => {
+          AsyncStorage.removeItem('token');
+          setIsLoggingOut(false); // stop loading (optional, since navigating away)
+          navigation.navigate('Auth');
+        }, 1000);
+      }} 
         style={[styles.menuItem, activeItem === 'Logout' && styles.activeMenuItem]}>
         <Ionicons name="log-out" size={20} color={activeItem === 'Logout' ? '#fff' : '#333'} />
         <Text style={[styles.menuItemText, activeItem === 'Logout' && styles.activeMenuItemText]}>Logout</Text>
       </TouchableOpacity>
+
+        {isLoggingOut && (
+        <View style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 999
+        }}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={{ color: '#fff', marginTop: 10, fontSize: 16 }}>Logging Out...</Text>
+        </View>
+      )}
     </View>
+
   );
 };
 
