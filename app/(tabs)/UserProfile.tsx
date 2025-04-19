@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   Modal, 
   TextInput, 
-  Alert 
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -24,6 +25,8 @@ const colors = {
 };
 
 const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/register.php';
+const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/djc74qsc8/image/upload';
+const CLOUDINARY_UPLOAD_PRESET = 'agrifit_profiles'; // Create this preset in your Cloudinary dashboard for unsigned uploads
 
 const UserProfile = ({ navigation }: { navigation: any }) => {
   const [userData, setUserData] = useState({
@@ -44,13 +47,13 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
     profileType: '',
   });
   const [token, setToken] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
     
   useEffect(() => {
     const getToken = async () => {
       try {
         const storedToken = await AsyncStorage.getItem('token');
         setToken(storedToken);
-        // console.log('Token refreshed on focus:', storedToken ? 'Token exists' : 'No token');
       } catch (error) {
         console.error('Error retrieving token:', error);
       }
@@ -74,35 +77,28 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
         
         // Check if user is still authenticated
         const token = await AsyncStorage.getItem('token');
-        // console.log('Current auth token:', token ? 'Token exists' : 'Token missing');
         
         if (!token) {
-          // console.log('User not authenticated, redirecting to login');
-          // Optional: Redirect to login
-          navigation.navigate('SignIn');
+          navigation?.navigate('SignIn');
           return;
         }
         
         // Fetch all user data at once to improve efficiency
-        const keys = ['sellerId', 'userName', 'userEmail', 'userPhone', 'userProfilePic', 'profile_type'];
+        const keys = ['sellerId', 'userName', 'userEmail', 'userPhone', 'userProfilePic', 'profileType'];
         const results = await AsyncStorage.multiGet(keys);
-        // console.log('Retrieved from AsyncStorage:', JSON.stringify(results, null, 2));
         
         // Convert results to an object for easier access
         const storedData = Object.fromEntries(results);
-        
-        // console.log('Retrieved from AsyncStorage:', JSON.stringify(storedData, null, 2));
         
         const userId = storedData['sellerId'];
         const userName = storedData['userName'];
         const userEmail = storedData['userEmail'];
         const userPhone = storedData['userPhone'];
         const userProfilePic = storedData['userProfilePic'];
-        const userProfileType = storedData['userType'];
+        const userProfileType = storedData['profileType'];
         
         // Update local state with AsyncStorage data if available
         if (userId) {
-          // console.log('Setting user data from AsyncStorage');
           setUserData(prev => ({
             ...prev,
             user_id: userId,
@@ -114,7 +110,6 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
               ? { uri: userProfilePic } 
               : require('../../assets/images/user.png'),
           }));
-          // console.log('Updated user data from AsyncStorage:', userData);
         } else {
           console.log('No user ID in AsyncStorage');
         }
@@ -147,15 +142,12 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
   const fetchLatestUserData = async (userId: string) => {
     try {
       const response = await axios.get(`${API_BASE_URL}?user_id=${userId}`);
-      console.log('Backend response:', response.data);
       
       // Check if response is an array (which seems to be the case from your logs)
       if (Array.isArray(response.data)) {
         // Find the user in the array that matches our user ID
         const userIdNum = parseInt(userId, 10);
         const userData = response.data.find(user => parseInt(user.user_id, 10) === userIdNum);
-        
-        // console.log('Found user in array:', userData);
         
         if (userData) {
           // Update local state with backend data
@@ -175,7 +167,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
             ['userName', userData.full_name || ''],
             ['userEmail', userData.email || ''],
             ['userPhone', userData.phone_number || ''],
-            ['userType', userData.profile_type || ''],
+            ['profileType', userData.profile_type || ''],
           ];
           
           if (userData.profile_pic) {
@@ -183,7 +175,6 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
           }
           
           await AsyncStorage.multiSet(updates);
-          // console.log('Updated AsyncStorage with backend data:', updates);
         } else {
           console.log('User not found in response array');
         }
@@ -197,6 +188,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
           name: user.full_name || prev.name,
           email: user.email || prev.email,
           phone: user.phone_number || prev.phone,
+          profileType: user.profile_type || prev.profileType,
           profilePicture: user.profile_pic 
             ? { uri: user.profile_pic} 
             : prev.profilePicture,
@@ -207,6 +199,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
           ['userName', user.full_name || ''],
           ['userEmail', user.email || ''],
           ['userPhone', user.phone_number || ''],
+          ['profileType', user.profile_type || ''],
         ];
         
         if (user.profile_pic) {
@@ -214,42 +207,73 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
         }
         
         await AsyncStorage.multiSet(updates);
-        // console.log('Updated AsyncStorage with backend data');
-      } else {
-        // console.log('Backend response does not contain user data in expected format');
       }
     } catch (error) {
       console.error('Error fetching latest user data:', error);
-      // Don't show alert here to avoid annoying the user if backend fetch fails
-      // We'll still show any data we got from AsyncStorage
     }
   };
+
+  // Upload image to Cloudinary
+  const uploadToCloudinary = async (imageUri: string) => {
+    try {
+      setIsUploading(true);
+      
+      // Create form data for Cloudinary
+      const formData = new FormData();
+      formData.append('file', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: `profile_${userData.user_id}.jpg`,
+      } as any);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'agrifit_profiles');
+      
+      // Upload to Cloudinary
+      const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (response.data && response.data.secure_url) {
+        return response.data.secure_url;
+      } else {
+        throw new Error('Failed to get secure URL from Cloudinary');
+      }
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
+      throw error;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Image Picker and Upload
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [4, 4],
-        quality: 1,
+        aspect: [1, 1],
+        quality: 0.7,
       });
 
       if (!result.canceled) {
         const selectedImage = result.assets[0];
         
-        // Create form data for upload
+        // First upload to Cloudinary
+        const cloudinaryUrl = await uploadToCloudinary(selectedImage.uri);
+        
+        // Create form data for backend update
         const formData = new FormData();
         formData.append('user_id', userData.user_id);
-        formData.append('profile_pic', {
-          uri: selectedImage.uri,
-          type: 'image/jpeg',
-          name: 'profile.jpg',
-        } as any);
         formData.append('full_name', userData.name);
         formData.append('email', userData.email);
         formData.append('phone_number', userData.phone);
+        formData.append('profile_pic', cloudinaryUrl);
+        formData.append('update_profile_pic', 'true');
 
-        // Upload to backend
+        // Update to your backend
         const response = await axios.post(API_BASE_URL, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -260,23 +284,23 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
           // Update local state
           setUserData(prev => ({
             ...prev,
-            profilePicture: { uri: selectedImage.uri }
+            profilePicture: { uri: cloudinaryUrl }
           }));
 
           // Save to AsyncStorage
-          await AsyncStorage.setItem('userProfilePic', selectedImage.uri);
+          await AsyncStorage.setItem('userProfilePic', cloudinaryUrl);
 
           Alert.alert('Success', 'Profile picture updated');
         } else {
-          throw new Error(response.data.message);
+          throw new Error(response.data.message || 'Failed to update profile picture');
         }
       }
     } catch (error) {
       console.error('Image upload error:', error);
       Alert.alert('Error', 'Failed to upload profile picture');
     }
-
   };  
+
   // Edit Profile
   const handleEditProfile = async () => {
     try {
@@ -286,8 +310,8 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
       formData.append('full_name', editedUserData.name);
       formData.append('email', editedUserData.email);
       formData.append('phone_number', editedUserData.phone);
-
-      // console.log('Form Data:', formData);
+      formData.append('profile_type', editedUserData.profileType);
+      formData.append('update_profile', 'true');
 
       // Send update request to backend
       const response = await axios.post(API_BASE_URL, formData, {
@@ -301,7 +325,8 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
         await AsyncStorage.multiSet([
           ['userName', editedUserData.name],
           ['userEmail', editedUserData.email],
-          ['userPhone', editedUserData.phone]
+          ['userPhone', editedUserData.phone],
+          ['profileType', editedUserData.profileType]
         ]);
 
         // Update local state
@@ -310,6 +335,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
           name: editedUserData.name,
           email: editedUserData.email,
           phone: editedUserData.phone,
+          profileType: editedUserData.profileType,
         }));
 
         // Exit edit mode
@@ -317,7 +343,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
 
         Alert.alert('Success', 'Profile updated successfully');
       } else {
-        throw new Error(response.data.message);
+        throw new Error(response.data.message || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Update profile error:', error);
@@ -328,16 +354,27 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
   return (
     <View style={styles.profileContainer}>
       {isLoading ? (
-        <Text style={styles.loadingText}>Loading profile data...</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading profile data...</Text>
+        </View>
       ) : (
         <>
           {/* Profile Picture with Edit Icon */}
-          <TouchableOpacity style={styles.profilePicContainer} onPress={pickImage}>
-            <Image
-              source={userData.profilePicture || require('../../assets/images/user.png')}
-              style={styles.profilePic}
-            />
-            <Ionicons name="camera" size={20} color="#333" style={styles.cameraIcon} />
+          <TouchableOpacity style={styles.profilePicContainer} onPress={pickImage} disabled={isUploading}>
+            {isUploading ? (
+              <View style={[styles.profilePic, styles.uploadingContainer]}>
+                <ActivityIndicator size="small" color={colors.white} />
+              </View>
+            ) : (
+              <>
+                <Image
+                  source={userData.profilePicture || require('../../assets/images/user.png')}
+                  style={styles.profilePic}
+                />
+                <Ionicons name="camera" size={20} color="#333" style={styles.cameraIcon} />
+              </>
+            )}
           </TouchableOpacity>
 
           {/* User Info */}
@@ -358,6 +395,9 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
             </View>
             <Text style={styles.userDetail}>{userData.email || 'No Email'}</Text>
             <Text style={styles.userDetail}>{userData.phone || 'No Phone'}</Text>
+            <Text style={[styles.userDetail, styles.profileTypeLabel]}>
+              Profile Type: <Text style={styles.profileTypeValue}>{userData.profileType || 'Consumer'}</Text>
+            </Text>
           </View>
         </>
       )}
@@ -393,6 +433,32 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
               placeholder="Phone Number"
               keyboardType="phone-pad"
             />
+            
+            {/* Profile Type Selector */}
+            <View style={styles.profileTypeSelector}>
+              <Text style={styles.profileTypeLabel}>Profile Type:</Text>
+              <View style={styles.profileTypeOptions}>
+                {['Consumer', 'Crop Farmer', 'Livestock Farmer'].map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.profileTypeOption,
+                      editedUserData.profileType === type && styles.selectedProfileType
+                    ]}
+                    onPress={() => setEditedUserData(prev => ({...prev, profileType: type}))}
+                  >
+                    <Text 
+                      style={[
+                        styles.profileTypeText,
+                        editedUserData.profileType === type && styles.selectedProfileTypeText
+                      ]}
+                    >
+                      {type}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
 
             <View style={styles.modalButtonContainer}>
               <TouchableOpacity 
@@ -414,16 +480,23 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
   },
+  loadingContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 150,
+  },
   loadingText: {
+    marginTop: 10,
     fontSize: 16,
-    color: colors.text,
-    marginTop: 20,
+    color: colors.gray,
   },
   profilePicContainer: {
     position: 'relative',
@@ -437,6 +510,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 1,
     borderColor: colors.gray,
+  },
+  uploadingContainer: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cameraIcon: {
     position: 'absolute',
@@ -464,6 +542,44 @@ const styles = StyleSheet.create({
   userDetail: {
     fontSize: 14,
     color: colors.gray,
+  },
+  profileTypeSelector: {
+    width: '100%',
+    marginBottom: 15,
+  },
+  profileTypeOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
+  },
+  profileTypeOption: {
+    flex: 1,
+    padding: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    margin: 2,
+  },
+  profileTypeLabel: {
+    marginTop: 8,
+    fontWeight: '500',
+  },
+  profileTypeValue: {
+    color: colors.primary,
+    fontWeight: 'bold',
+  },
+  selectedProfileType: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  profileTypeText: {
+    fontSize: 12,
+    color: colors.text,
+  },
+  selectedProfileTypeText: {
+    color: colors.white,
+    fontWeight: 'bold',
   },
   // Modal Styles
   modalContainer: {
