@@ -1,4 +1,3 @@
-// import React from 'react';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -28,29 +27,74 @@ import MessagesScreen from '@/components/Messages';
 import SellProductsScreen from '@/components/Sell';
 
 import CustomDrawer from './CustomDrawer';
+import { ActivityIndicator, View } from 'react-native';
 
 const Drawer = createDrawerNavigator();
 
 const DashboardPages = () => {
   const [userProfile, setUserProfile] = useState('');
+  const [initialRouteName, setInitialRouteName] = useState('ConsumerHome');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     // Retrieve profile type from AsyncStorage
     const fetchProfile = async () => {
       try {
-        const profile = await AsyncStorage.getItem('profile_type');
-        if (profile) {
-          setUserProfile(profile);
+        // First, check for the profile type selected in the CustomDrawer
+        const selectedProfile = await AsyncStorage.getItem('currentProfileType');
+        
+        if (selectedProfile) {
+          // console.log('Using selected profile from drawer:', selectedProfile);
+          setUserProfile(selectedProfile);
+          
+          // Set initial route based on the selected profile type
+          if (selectedProfile === 'Consumer') {
+            setInitialRouteName('ConsumerHome');
+          } else if (selectedProfile === 'Crop Farmer') {
+            setInitialRouteName('Crop FarmerHome');
+          } else if (selectedProfile === 'Livestock Farmer') {
+            setInitialRouteName('Livestock FarmerHome');
+          }
+        } else {
+          // If no selection found, fallback to the profile_type from login
+          const backendProfile = await AsyncStorage.getItem('profile_type');
+          if (backendProfile) {
+            // console.log('Using backend profile:', backendProfile);
+            setUserProfile(backendProfile);
+            
+            // Set initial route based on the backend profile type
+            if (backendProfile === 'Consumer') {
+              setInitialRouteName('ConsumerHome');
+            } else if (backendProfile === 'Crop Farmer') {
+              setInitialRouteName('Crop FarmerHome');
+            } else if (backendProfile === 'Livestock Farmer') {
+              setInitialRouteName('Livestock FarmerHome');
+            }
+          }
         }
+        
+        setIsInitialized(true);
       } catch (error) {
         console.error("Error fetching profile from AsyncStorage:", error);
+        setIsInitialized(true);
       }
     };
+    
     fetchProfile();
   }, []);
+  
+  // Wait for initialization before rendering
+  if (!isInitialized) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+      </View>
+    );
+  }
 
   return (
     <Drawer.Navigator 
+      initialRouteName={initialRouteName}
       drawerContent={(props) => <CustomDrawer {...props} selectedProfile={userProfile} />} 
       screenOptions={{
         headerTitle: ()=> <CustomHeader navigation={undefined}/>,

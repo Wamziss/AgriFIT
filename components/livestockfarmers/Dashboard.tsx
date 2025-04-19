@@ -7,18 +7,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
 type Product = {
-  seller_id(seller_id: any): void;
+  seller_id: string;
   image: string;
   reviews_avg: ReactNode;
   product_id: string;
-  product_price: ReactNode;
-  product_name: ReactNode; 
-  id: string;
-  name: string;
-  price: string;
+  product_price: string;
+  product_name: string; 
+  description: string;
+  category: string;
+  sub_category: string;
+  location: string;
+  created_at: string;
+  id?: string;
+  name?: string;
+  price?: string;
   seller_phone?: string; 
-  sellerReview: string;
-  imageUrl: string;
+  sellerReview?: string;
+  imageUrl?: string;
 };
 
 const colors = {
@@ -44,27 +49,27 @@ const Dashboard: React.FC = () => {
   const [addingToCart, setAddingToCart] = useState<string | null>(null); // Store productId being added
   const navigation = useNavigation();
 
-    // Get token on component mount
-    useEffect(() => {
-      const getToken = async () => {
-        try {
-          const storedToken = await AsyncStorage.getItem('token');
-          setToken(storedToken);
-          // console.log('Token refreshed on focus:', storedToken ? 'Token exists' : 'No token');
-        } catch (error) {
-          console.error('Error retrieving token:', error);
-        }
-      };
-      
-      getToken(); // Initial load
-      
-      // Add a listener to refresh token when Dashboard comes into focus
-      const unsubscribe = navigation?.addListener('focus', () => {
-        getToken();
-      });
-      
-      return unsubscribe;
-    }, [navigation]);
+  // Get token on component mount
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        setToken(storedToken);
+        // console.log('Token refreshed on focus:', storedToken ? 'Token exists' : 'No token');
+      } catch (error) {
+        console.error('Error retrieving token:', error);
+      }
+    };
+    
+    getToken(); // Initial load
+    
+    // Add a listener to refresh token when Dashboard comes into focus
+    const unsubscribe = navigation?.addListener('focus', () => {
+      getToken();
+    });
+    
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
     fetchProducts();
@@ -79,8 +84,10 @@ const Dashboard: React.FC = () => {
         }
       });
       
+      // Log the response to check if sub_category field is present
+      console.log('Sample product data:', response.data.length > 0 ? response.data[0] : 'No products');
+      
       setProducts(response.data);
-      // console.log('Fetched products:', response.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -91,7 +98,7 @@ const Dashboard: React.FC = () => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchProducts();  // Reuse the same function
+    fetchProducts().finally(() => setRefreshing(false));
   }, []);
 
   const fetchSellerPhone = async (sellerId: string) => {
@@ -145,10 +152,16 @@ const Dashboard: React.FC = () => {
   };  
 
   const filterProducts = (category: string) => {
-    if (category === 'All') return products;
-      return products.filter(product => 
-        typeof product.product_name === 'string' && product.product_name.toLowerCase().includes(category.toLowerCase())
-      ) 
+    if (category === 'All') {
+      return products; // Return all products
+    }
+    
+    // Filter based on sub_category field instead of product_name
+    return products.filter(product => {
+      // Make sure sub_category exists and matches the selected category
+      return product.sub_category && 
+             product.sub_category.toLowerCase() === category.toLowerCase();
+    });
   };
 
   const addToCart = async (productId: string) => {
@@ -213,6 +226,8 @@ const Dashboard: React.FC = () => {
       <View style={styles.livestockDetails}>
         <Text style={styles.livestockName}>{item.product_name}</Text>
         <Text style={styles.livestockPrice}>KSh {item.product_price}</Text>
+        {/* Add sub-category label for debugging */}
+        <Text style={{color: colors.text, paddingVertical: 2}}>{item.sub_category || 'Not specified'}</Text>
         {/* <Text style={styles.sellerReview}>★★★★★  {item.reviews_avg}/5</Text> */}
         <View style={styles.actions}>
           <TouchableOpacity 
@@ -229,8 +244,10 @@ const Dashboard: React.FC = () => {
               </>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.contactButton} onPress={() => handleContactSeller(item.seller_id as unknown as string)}>
-        
+          <TouchableOpacity 
+            style={styles.contactButton} 
+            onPress={() => handleContactSeller(item.seller_id)}
+          >
             <Ionicons name="call-outline" size={15} color={colors.white} />
             <Text style={styles.contactButtonText}>Contact seller</Text>
           </TouchableOpacity>
@@ -241,54 +258,58 @@ const Dashboard: React.FC = () => {
 
   return (
     <View style={styles.container}>
-    <View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
-        {['All', 'Cattle', 'Sheep', 'Goats', 'Hens', 'Pigs', 'Horses', 'Rabbits'].map((category) => (
-          <TouchableOpacity
-            key={category}
-            onPress={() => setSelectedCategory(category)}
-            style={[
-              styles.categoryCard,
-              selectedCategory === category && styles.activeCategory
-            ]}
-          >
-            <Text style={[
-              styles.categoryText,
-              selectedCategory === category && styles.activeCategoryText
-            ]}>
-              {category}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
+          {['All', 'Cattle', 'Sheep', 'Goats', 'Hens', 'Pigs', 'Horses', 'Rabbits'].map((category) => (
+            <TouchableOpacity
+              key={category}
+              onPress={() => setSelectedCategory(category)}
+              style={[
+                styles.categoryCard,
+                selectedCategory === category && styles.activeCategory
+              ]}
+            >
+              <Text style={[
+                styles.categoryText,
+                selectedCategory === category && styles.activeCategoryText
+              ]}>
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-      {loading ? (
-        <Text>Loading...</Text>
-      ) : (
-        <FlatList
-          data={filterProducts(selectedCategory)}
-          renderItem={renderProductCard}
-          // keyExtractor={(item) => item.product_id}
-          keyExtractor={(item, index) => {
-            if (item.product_id) return `crop-${item.product_id}`;
-            
-            // Fallback to a combination of index and some unique identifier
-            return `crop-${index}-${item.product_name}`;
-          }}
-          numColumns={2}
-          contentContainerStyle={styles.listContainer}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-            />
-          }
-          ListEmptyComponent={
-            <Text>No products found</Text>
-          }
-        />
-      )}
-    </View>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Loading livestock...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filterProducts(selectedCategory)}
+            renderItem={renderProductCard}
+            keyExtractor={(item, index) => {
+              if (item.product_id) return `livestock-${item.product_id}`;
+              
+              // Fallback to a combination of index and some unique identifier
+              return `livestock-${index}-${item.product_name}`;
+            }}
+            numColumns={2}
+            contentContainerStyle={styles.listContainer}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
+            }
+            ListEmptyComponent={
+              // <View style={styles.emptyListContainer}>
+                <Text style={{color: colors.text, paddingVertical: 10, textAlign: 'center'}}>No livestock found in this category</Text>
+              // </View>
+            }
+          />
+        )}
+      </View>
     </View>
   );
 };
@@ -367,6 +388,17 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginBottom: 5,
   },
+  loadingContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 150,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: 'gray',
+  },
   sellerReview: {
     fontSize: 14,
     color: '#FFA000',
@@ -376,7 +408,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 4,
+    marginBottom: 4,
+    marginTop: 10,
   },
   iconButton: {
     padding: 5,

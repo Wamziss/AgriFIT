@@ -66,50 +66,64 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
   }, [selectedProfile]);
 
   // Save profile type when it changes
-  const handleProfileChange = async (value: 'Consumer' | 'Crop Farmer' | 'Livestock Farmer') => {
-    try {
-      setIsChangingProfile(true);
-      setProfile(value);
-      await AsyncStorage.setItem('currentProfileType', value);
-      
-      // Update the profileType in backend too (optional)
-      const userId = await AsyncStorage.getItem('sellerId');
-      
-      if (userId) {
-        // Prepare form data
-        const formData = new FormData();
-        formData.append('user_id', userId);
-        formData.append('profile_type', value);
-        formData.append('update_profile_type', 'true');
+// In CustomDrawer.tsx - handleProfileChange function
+const handleProfileChange = async (value: 'Consumer' | 'Crop Farmer' | 'Livestock Farmer') => {
+  try {
+    setIsChangingProfile(true);
+    setProfile(value);
+    
+    // Save the selected profile type to AsyncStorage with a clear key name
+    await AsyncStorage.setItem('currentProfileType', value);
+    
+    // Update the profileType in backend too (optional)
+    const userId = await AsyncStorage.getItem('sellerId');
+    
+    if (userId) {
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('user_id', userId);
+      formData.append('profile_type', value);
+      formData.append('update_profile_type', 'true');
 
-        // Send update request to backend
-        fetch('https://agrifit-backend-production.up.railway.app/register.php', {
-          method: 'POST',
-          body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Profile type update response:', data);
-          // Update the profileType in AsyncStorage
-          AsyncStorage.setItem('profileType', value);
-        })
-        .catch(error => {
-          console.error('Error updating profile type:', error);
-        })
-        .finally(() => {
-          // Navigate to the appropriate dashboard
-          navigation.navigate(`${value}Home`);
-          setIsChangingProfile(false);
-        });
-      } else {
-        navigation.navigate(`${value}Home`);
+      // Send update request to backend
+      fetch('https://agrifit-backend-production.up.railway.app/register.php', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Profile type update response:', data);
+      })
+      .catch(error => {
+        console.error('Error updating profile type:', error);
+      })
+      .finally(() => {
+        // Determine the correct route based on the selected profile
+        let routeName;
+        if (value === 'Consumer') routeName = 'ConsumerHome';
+        else if (value === 'Crop Farmer') routeName = 'Crop FarmerHome';
+        else if (value === 'Livestock Farmer') routeName = 'Livestock FarmerHome';
+        
+        // Navigate to the appropriate dashboard
+        navigation.navigate(routeName);
         setIsChangingProfile(false);
-      }
-    } catch (error) {
-      console.error('Error saving profile type:', error);
+      });
+    } else {
+      // Determine the correct route based on the selected profile
+      let routeName;
+      if (value === 'Consumer') routeName = 'ConsumerHome';
+      else if (value === 'Crop Farmer') routeName = 'Crop FarmerHome';
+      else if (value === 'Livestock Farmer') routeName = 'Livestock FarmerHome';
+      
+      // Navigate to the appropriate dashboard
+      navigation.navigate(routeName);
       setIsChangingProfile(false);
     }
-  };
+  } catch (error) {
+    console.error('Error saving profile type:', error);
+    setIsChangingProfile(false);
+  }
+};
 
   const handleMenuItemPress = (item: { label: string; action: () => void; }) => {
     setActiveItem(item.label);
