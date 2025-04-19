@@ -92,7 +92,7 @@ export const ToastModal = ({
 const styles = StyleSheet.create({
   toastContainer: {
     position: 'absolute',
-    top: 80,
+    top: 50,
     alignSelf: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -102,7 +102,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    zIndex: 1000
   },
   toastText: {
     fontSize: 16,

@@ -269,7 +269,6 @@ const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     }
 
-
   };
   return (
     <KeyboardAvoidingView 

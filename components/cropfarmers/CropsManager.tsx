@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, Modal, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useToast, ToastModal, ToastType } from '../subcomponents/Toast'; // Assuming ToastComponent is in the same directory
+import { useToast, ToastModal, ToastType } from '../subcomponents/Toast';
 
-const API_URL = 'https://agrifit-backend-production.up.railway.app/crop_profile.php'; // Replace with your actual backend URL
+const API_URL = 'https://agrifit-backend-production.up.railway.app/crop_profile.php';
 
 const colors = {
   primary: '#4CAF50',
@@ -25,6 +25,7 @@ type Crop = {
   planting_date: string;
   harvest_time: string;
   amount_planted: string;
+  planting_type?: string; // Added for tracking seedlings or area
 };
 
 const CropsManager = () => {
@@ -33,14 +34,16 @@ const CropsManager = () => {
   const [harvestTime, setHarvestTime] = useState<Date | null>(null);
   const [details, setDetails] = useState('');
   const [isSeedlingsSelected, setIsSeedlingsSelected] = useState(true);
+  const [areaUnit, setAreaUnit] = useState<'m²' | 'acres'>('acres');
   const [cropList, setCropList] = useState<Crop[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [showPlantedOnPicker, setShowPlantedOnPicker] = useState(false);
   const [showHarvestTimePicker, setShowHarvestTimePicker] = useState(false);
   const [editingCrop, setEditingCrop] = useState<Crop | null>(null);
   const modalKey = modalVisible ? 'modal-open' : 'modal-closed';
+  
+  // Get toast functionality from the hook
   const { showToast, message, type, isVisible } = useToast();
-
 
   // Fetch crops when component mounts
   useEffect(() => {
@@ -54,7 +57,7 @@ const CropsManager = () => {
       setCropList(response.data);
     } catch (error) {
       console.error('Error fetching crops:', error);
-      Alert.alert('Error', 'Failed to fetch crops');
+      showToast('Failed to fetch crops', ToastType.ERROR);
     }
   };
 
@@ -63,24 +66,28 @@ const CropsManager = () => {
       const owner = await AsyncStorage.getItem('sellerId');
 
       if (!owner) {
-          // Alert.alert('Error', 'Owner ID not found in storage');
           showToast('Please try again', ToastType.ERROR);
           return;
       }
 
       try {
+        // Format the amount_planted field to include type information
+        const plantingType = isSeedlingsSelected ? 'seedlings' : 'area';
+        const formattedDetails = isSeedlingsSelected 
+          ? `${details} seedlings` 
+          : `${details} ${areaUnit}`;
+
         // Ensure dates are converted to ISO string or specific format
         const cropData = {
           crop_name: cropName,
           planting_date: plantedOn.toISOString().split('T')[0], // Convert to YYYY-MM-DD
           harvest_time: harvestTime.toISOString().split('T')[0], // Convert to YYYY-MM-DD
-          amount_planted: details,
-          owner_id: owner, // Replace with actual user ID
+          amount_planted: formattedDetails,
+          planting_type: plantingType, // Add this field to track type
+          owner_id: owner,
         };
   
-        // Log the exact data being sent
         console.log("Sending crop data:", cropData);
-        showToast('Crop details added successfully', ToastType.SUCCESS);
   
         let response;
         if (editingCrop) {
@@ -95,6 +102,7 @@ const CropsManager = () => {
               'Content-Type': 'multipart/form-data'
             }
           });
+          
           showToast('Crop details updated successfully', ToastType.SUCCESS);
         } else {
           const formData = new FormData();
@@ -107,10 +115,11 @@ const CropsManager = () => {
               'Content-Type': 'multipart/form-data'
             }
           });
+          
+          
         }
   
-        console.log("Full response:", response);
-        showToast('Crop details added successfully', ToastType.SUCCESS);
+        // console.log("Full response:", response);
   
         // Refresh crop list
         fetchCrops();
@@ -118,13 +127,11 @@ const CropsManager = () => {
         setModalVisible(false);
         setEditingCrop(null);
       } catch (error) {
-        // console.error('Error saving crop:', error.response ? error.response.data : error);
-        // Alert.alert('Error', 'Failed to save crop');
+        console.error('Error saving crop:', error);
         showToast('Failed to add crop details. Try again', ToastType.ERROR);
       }
     showToast('Crop details added successfully', ToastType.SUCCESS);
     } else {
-      // Alert.alert('Validation Error', 'Please fill in all fields');
       showToast('Please fill in all fields', ToastType.ERROR);
     }
   };
@@ -133,11 +140,11 @@ const CropsManager = () => {
   const handleDeleteCrop = async (cropId: string) => {
     try {
       await axios.delete(`${API_URL}?crop_id=${cropId}`);
-      showToast('Crop deleted!', ToastType.SUCCESS);
+      
       fetchCrops();
+      showToast('Crop deleted!', ToastType.SUCCESS);
     } catch (error) {
       console.error('Error deleting crop:', error);
-      Alert.alert('Error', 'Failed to delete crop');
       showToast('Failed to delete crop. Try again', ToastType.ERROR);
     }
   };
@@ -149,16 +156,53 @@ const CropsManager = () => {
     setHarvestTime(null);
     setDetails('');
     setIsSeedlingsSelected(true);
+    setAreaUnit('acres');
   };
 
   // Prepare crop for editing
   const handleEditCrop = (crop: Crop) => {
     setEditingCrop(crop);
     setCropName(crop.crop_name);
-    setDetails(crop.amount_planted);
+    
+    // Parse the amount_planted to determine type and value
+    const amountPlanted = crop.amount_planted || '';
+    
+    // Check if it contains "seedlings"
+    if (amountPlanted.includes('seedlings')) {
+      setIsSeedlingsSelected(true);
+      setDetails(amountPlanted.replace(' seedlings', ''));
+    } 
+    // Check if it contains area units
+    else if (amountPlanted.includes('m²') || amountPlanted.includes('acres')) {
+      setIsSeedlingsSelected(false);
+      
+      if (amountPlanted.includes('m²')) {
+        setAreaUnit('m²');
+        setDetails(amountPlanted.replace(' m²', ''));
+      } else {
+        setAreaUnit('acres');
+        setDetails(amountPlanted.replace(' acres', ''));
+      }
+    } 
+    // Default fallback
+    else {
+      setIsSeedlingsSelected(true);
+      setDetails(amountPlanted);
+    }
+    
     setPlantedOn(new Date(crop.planting_date));
     setHarvestTime(new Date(crop.harvest_time));
     setModalVisible(true);
+  };
+
+  // Parse display text for amount planted
+  const getPlantingDisplayText = (amountPlanted: string) => {
+    if (amountPlanted?.includes('seedlings')) {
+      return `Seedlings: ${amountPlanted}`;
+    } else if (amountPlanted?.includes('m²') || amountPlanted?.includes('acres')) {
+      return `Area: ${amountPlanted}`;
+    }
+    return `Amount: ${amountPlanted ?? 'N/A'}`;
   };
 
   // Render individual crop item
@@ -167,8 +211,7 @@ const CropsManager = () => {
       <Text style={styles.cropName}>{item.crop_name}</Text>
       <Text>Planted On: {item.planting_date}</Text>
       <Text>Expected Harvest: {item.harvest_time}</Text>
-      {/* <Text>{item.amount_planted.includes('acre') ? 'Area: ' : 'Seedlings: '}{item.amount_planted}</Text> */}
-      <Text>{item.amount_planted?.includes('acre') ? `Area: ${item.amount_planted}` : `Seedlings: ${item.amount_planted ?? 'N/A'}`}</Text>
+      <Text>{getPlantingDisplayText(item.amount_planted)}</Text>
       <View style={styles.actionButtonContainer}>
         <TouchableOpacity 
           style={styles.editButton} 
@@ -203,21 +246,15 @@ const CropsManager = () => {
 
       <FlatList
         data={cropList}
-        // keyExtractor={(item) => item.crop_id || ''}
         keyExtractor={(item, index) => {
-          // Use crop_id if available
           if (item.crop_id) return `crop-${item.crop_id}`;
-          
-          // Fallback to a combination of index and some unique identifier
           return `crop-${index}-${item.crop_name}-${item.planting_date}`;
         }}
         renderItem={renderCropItem}
         ListEmptyComponent={<Text style={styles.emptyList}>No crops added yet</Text>}
       />
 
-
-
-      {/* Modal remains mostly the same as in the original code */}
+      {/* Add crop modal */}
       <Modal
         animationType="slide"
         key={modalKey} 
@@ -236,7 +273,6 @@ const CropsManager = () => {
               onChangeText={setCropName}
             />
 
-            {/* Date Pickers remain the same */}
             <TouchableOpacity
               onPress={() => setShowPlantedOnPicker(true)}
               style={styles.dateInput}
@@ -281,6 +317,7 @@ const CropsManager = () => {
               />
             )}
 
+            {/* Planting Type Selection */}
             <View style={styles.switchContainer}>
               <TouchableOpacity
                 onPress={() => setIsSeedlingsSelected(true)}
@@ -302,12 +339,46 @@ const CropsManager = () => {
               </TouchableOpacity>
             </View>
 
-            <TextInput
-              style={styles.input}
-              placeholder={isSeedlingsSelected ? 'Number of Seedlings' : 'Area of Land Planted (e.g., 1/2 acre)'}
-              value={details}
-              onChangeText={setDetails}
-            />
+            {/* Input with units selection if area is chosen */}
+            {isSeedlingsSelected ? (
+              <TextInput
+                style={styles.input}
+                placeholder="Number of Seedlings"
+                value={details}
+                keyboardType="numeric"
+                onChangeText={setDetails}
+              />
+            ) : (
+              <View style={styles.inputWithUnits}>
+                <TextInput
+                  style={styles.unitInput}
+                  placeholder="Area Value"
+                  value={details}
+                  keyboardType="numeric"
+                  onChangeText={setDetails}
+                />
+                <View style={styles.unitSelector}>
+                  <TouchableOpacity
+                    onPress={() => setAreaUnit('acres')}
+                    style={[
+                      styles.unitButton,
+                      areaUnit === 'acres' && styles.activeUnitButton
+                    ]}
+                  >
+                    <Text style={styles.unitText}>acres</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setAreaUnit('m²')}
+                    style={[
+                      styles.unitButton,
+                      areaUnit === 'm²' && styles.activeUnitButton
+                    ]}
+                  >
+                    <Text style={styles.unitText}>m²</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
 
             <TouchableOpacity onPress={handleSubmitCrop} style={styles.addButton}>
               <Text style={styles.addButtonText}>{editingCrop ? 'Update Crop' : 'Add Crop'}</Text>
@@ -318,18 +389,23 @@ const CropsManager = () => {
             </TouchableOpacity>
           </ScrollView>
         </View>
+        <ToastModal 
+          message={message}
+          type={type}
+          isVisible={isVisible}
+        />
       </Modal>
 
-            {/* Add the Toast Modal */}
-            <ToastModal 
+      {/* Toast Modal */}
+      <ToastModal 
         message={message}
         type={type}
         isVisible={isVisible}
       />
+      
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -416,13 +492,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    // zIndex: 1000,
   },
   modalContent: {
     backgroundColor: colors.white,
     padding: 20,
     borderRadius: 10,
     minWidth: '90%',
-    maxHeight: '80%',
     marginVertical: 'auto'
   },
   modalTitle: {
@@ -465,6 +541,36 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
   },
+  inputWithUnits: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  unitInput: {
+    flex: 2,
+    backgroundColor: colors.background,
+    padding: 12,
+    borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6,
+  },
+  unitSelector: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  unitButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+  },
+  activeUnitButton: {
+    backgroundColor: colors.secondary,
+  },
+  unitText: {
+    fontWeight: 'bold',
+    color: colors.text,
+  }
 });
 
 export default CropsManager;

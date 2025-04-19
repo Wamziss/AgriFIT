@@ -24,13 +24,16 @@ const LivestockProfiles = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentLivestock, setCurrentLivestock] = useState({
+    animal_id: '',
+    owner_id: '1', // Set a default owner_id or get from context/state
     animal_name: '',
     breed: '',
     age: '',
     weight: '',
     births: '',
+    photo: '',
   });
-  const [image, setImage] = useState<{ uri: string } | null>(null);
+  const [image, setImage] = useState(null);
 
   // Fetch livestock
   const fetchLivestock = async () => {
@@ -38,17 +41,21 @@ const LivestockProfiles = () => {
       const response = await axios.get(API_BASE_URL);
       setLivestock(response.data);
     } catch (error) {
+      console.error('Fetch Error:', error);
       Alert.alert('Error', 'Failed to fetch livestock profiles');
     }
   };
 
   const resetForm = () => {
     setCurrentLivestock({
+      animal_id: '',
+      owner_id: '1', // Set a default owner_id or get from context/state
       animal_name: '',
       breed: '',
       age: '',
       weight: '',
       births: '',
+      photo: '',
     });
     setImage(null);
     setModalVisible(false);
@@ -59,28 +66,47 @@ const LivestockProfiles = () => {
     fetchLivestock();
   }, []);
 
-  const handleEdit = (item) => {
-    setCurrentLivestock(item);
-    setImage(item.photo ? { uri: item.photo } : null);
+  const handleEdit = (item: {
+    animal_id: string | number;
+    owner_id: string;
+    animal_name: string;
+    breed: string;
+    age: string;
+    weight: string;
+    births: string;
+    photo: string;
+  }) => {
+    setCurrentLivestock({
+      animal_id: item.animal_id.toString() || '',
+      owner_id: item.owner_id || '1',
+      animal_name: item.animal_name,
+      breed: item.breed,
+      age: item.age,
+      weight: item.weight,
+      births: item.births,
+      photo: item.photo
+    });
+    setImage(item.photo ? { uri: item.photo } as any : null);
     setEditMode(true);
     setModalVisible(true);
-};
 
-const handleDelete = async (animal_id) => {
+  };    
+  
+  const handleDelete = async (animal_id: any) => {
     try {
-        const response = await axios.delete(`${API_BASE_URL}?animal_id=${animal_id}`);
-        
-        if (response.data.status === 'success') {
-            Alert.alert('Success', 'Livestock profile deleted successfully');
-            fetchLivestock();
-        } else {
-            Alert.alert('Error', response.data.message || 'Failed to delete livestock profile');
-        }
+      const response = await axios.delete(`${API_BASE_URL}?animal_id=${animal_id}`);
+      
+      if (response.data.status === 'success') {
+        Alert.alert('Success', 'Livestock profile deleted successfully');
+        fetchLivestock();
+      } else {
+        Alert.alert('Error', response.data.message || 'Failed to delete livestock profile');
+      }
     } catch (error) {
-        console.error('Delete Error:', error);
-        Alert.alert('Error', 'Failed to delete livestock profile');
+      console.error('Delete Error:', error);
+      Alert.alert('Error', 'Failed to delete livestock profile');
     }
-};
+  };
 
   return (
     <View style={styles.container}>
@@ -91,11 +117,9 @@ const handleDelete = async (animal_id) => {
           <LivestockItem
             item={item}
             onEdit={() => handleEdit(item)}
-
-            onDelete={() => handleDelete(item.animal_id)}
-          />
+            onDelete={() => handleDelete(item?.animal_id)}          />
         )}
-        keyExtractor={(item) => item.animal_id || Date.now().toString()}
+        keyExtractor={(item) => item.animal_id?.toString() || Date.now().toString()}
         contentContainerStyle={styles.listContainer}
       />
       <TouchableOpacity

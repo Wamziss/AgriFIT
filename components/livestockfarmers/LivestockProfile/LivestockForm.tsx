@@ -104,7 +104,7 @@ const LivestockForm = ({
             });
         }
         console.log('Form Data:', formData);
-        console.log(editMode);
+        // console.log(editMode);
 
         // const response = await axios.post(API_BASE_URL, formData, {
         //     headers: { 'Content-Type': 'multipart/form-data' },
