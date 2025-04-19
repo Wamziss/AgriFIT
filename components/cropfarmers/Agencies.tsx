@@ -1,13 +1,16 @@
+import axios from 'axios';
 import React, { useState, useEffect, ReactNode } from 'react';
+import { Linking } from 'react-native';
+import { Modal } from 'react-native';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 
 type Company = {
   agency_name: ReactNode;
   business_email(business_email: any): void;
-  id: string;
+  agency_id: string;
   name: string;
   description: string;
-  contact: string;
+  phone_number: string;
 };
 
 const colors = {
@@ -27,6 +30,8 @@ const Agencies = () => {
   const [agritechCompanies, setAgritechCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [selectedAgency, setSelectedAgency] = useState<Company | null>(null);
 
   useEffect(() => {
     fetchAgritechCompanies();
@@ -34,15 +39,16 @@ const Agencies = () => {
 
   const fetchAgritechCompanies = async () => {
     try {
-      // Replace with your actual backend endpoint
-      const response = await fetch(`${API_BASE_URL}/agencies.php`);
-      
-      if (!response.ok) {
+      const response = await axios.get(`${API_BASE_URL}/agencies.php`, {
+        params: {
+          category: 'AgroBusiness',
+        }
+      });
+      if (!response.data) {
         throw new Error('Failed to fetch agritech companies');
       }
       
-      const data: Company[] = await response.json();
-      setAgritechCompanies(data);
+      setAgritechCompanies(response.data);
       setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -50,9 +56,28 @@ const Agencies = () => {
     }
   };
 
-  const handleContact = (email: string) => {
-    console.log(`Contacting ${email}`);
-    // You can implement email linking or other contact functionality here
+  const handleContact = (agency: Company) => {
+    setSelectedAgency(agency);
+    setModalVisible(true);
+  };
+
+  const handleEmail = () => {
+    if (selectedAgency?.business_email) {
+      Linking.openURL(`mailto:${selectedAgency.business_email}`);
+      setModalVisible(false);
+    }
+  };
+
+  const handleCall = () => {
+    if (selectedAgency?.phone_number) {
+      Linking.openURL(`tel:${selectedAgency.phone_number}`);
+      setModalVisible(false);
+    }
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedAgency(null);
   };
 
   if (loading) {
@@ -76,20 +101,56 @@ const Agencies = () => {
       <Text style={styles.title}>AgriTech Companies</Text>
       <FlatList
         data={agritechCompanies}
-        keyExtractor={(item) => item.id}
+        // keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.agency_id?.toString() || Math.random().toString()}
         renderItem={({ item }) => (
           <View style={styles.companyCard}>
             <Text style={styles.companyName}>{item.agency_name}</Text>
             <Text style={styles.companyDescription}>{item.description}</Text>
             <TouchableOpacity 
               style={styles.contactButton} 
-              onPress={() => handleContact(item.business_email as unknown as string)}
+              onPress={() => handleContact(item)}
             >
               <Text style={styles.contactButtonText}>Contact</Text>
             </TouchableOpacity>
           </View>
         )}
       />
+
+{/* Contact Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Contact {selectedAgency?.agency_name}</Text>
+            
+            <TouchableOpacity 
+              style={styles.modalButton} 
+              onPress={handleEmail}
+            >
+              <Text style={styles.modalButtonText}>Email {selectedAgency?.agency_name}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.modalButton} 
+              onPress={handleCall}
+            >
+              <Text style={styles.modalButtonText}>Call {selectedAgency?.agency_name}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.modalButton, styles.cancelButton]} 
+              onPress={closeModal}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -135,6 +196,53 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: colors.primary,
+  },
+  modalButton: {
+    backgroundColor: colors.background,
+    padding: 15,
+    borderRadius: 5,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+  },
+  modalButtonText: {
+    color: colors.text,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cancelButton: {
+    backgroundColor: '#eee',
+    borderWidth: 1,
+    borderColor: '#eee',
+    width: '50%',
+    padding: 5,
+    marginTop: 10,
+  },
+  cancelButtonText: {
+    color: colors.text,
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 

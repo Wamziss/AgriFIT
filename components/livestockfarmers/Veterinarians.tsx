@@ -2,6 +2,8 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Star } from 'lucide-react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Linking } from 'react-native';
+import { Modal } from 'react-native';
 
 const colors = {
   primary: '#4CAF50',
@@ -21,7 +23,7 @@ type Veterinarian = {
   id: string;
   name: string;
   specialization: string;
-  contact: string;
+  phone_number: string;
   rating: number;
 };
 
@@ -31,6 +33,8 @@ const Veterinarians = () => {
   const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [selectedVet, setSelectedVet] = useState<Company | null>(null);
 
   useEffect(() => {
     fetchVeterinarians();
@@ -58,9 +62,27 @@ const Veterinarians = () => {
     }
   };
 
-  const handleContact = (email: string) => {
-    console.log(`Contacting ${email}`);
-    // You can implement email linking or other contact functionality here
+  const handleContact = (agency: Veterinarian) => {
+    setSelectedVet(agency);
+    setModalVisible(true);
+  };
+  const handleEmail = () => {
+    if (selectedVet?.vet_email) {
+      Linking.openURL(`mailto:${selectedVet.vet_email}`);
+      setModalVisible(false);
+    }
+  };
+
+  const handleCall = () => {
+    if (selectedVet?.phone_number) {
+      Linking.openURL(`tel:${selectedVet.phone_number}`);
+      setModalVisible(false);
+    }
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedVet(null);
   };
 
   const renderStars = (rating: number) => {
@@ -70,7 +92,7 @@ const Veterinarians = () => {
           <Ionicons
             key={`star-${i}`}  // Use a unique key that doesn't depend on list order
             name={i < rating ? 'star' : 'star-outline'}
-            size={20}
+            size={12}
             color={i < rating ? colors.gold : colors.text}
           />
         ))}
@@ -108,13 +130,48 @@ const Veterinarians = () => {
             {renderStars(item.rating)}
             <TouchableOpacity 
               style={styles.contactButton} 
-              onPress={() => handleContact(item.vet_email as unknown as string)}
+              onPress={() => handleContact(item)}
             >
               <Text style={styles.contactButtonText}>Contact</Text>
             </TouchableOpacity>
           </View>
         )}
       />
+
+      {/* Contact Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Contact {selectedVet?.vet_name}</Text>
+            
+            <TouchableOpacity 
+              style={styles.modalButton} 
+              onPress={handleEmail}
+            >
+              <Text style={styles.modalButtonText}>Email {selectedVet?.vet_name}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.modalButton} 
+              onPress={handleCall}
+            >
+              <Text style={styles.modalButtonText}>Call {selectedVet?.vet_name}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.modalButton, styles.cancelButton]} 
+              onPress={closeModal}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -162,7 +219,7 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     marginLeft: 5,
-    fontSize: 14,
+    fontSize: 12,
     color: colors.text,
   },
   contactButton: {
@@ -175,6 +232,53 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: colors.primary,
+  },
+  modalButton: {
+    backgroundColor: colors.background,
+    padding: 15,
+    borderRadius: 5,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+  },
+  modalButtonText: {
+    color: colors.text,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cancelButton: {
+    backgroundColor: '#eee',
+    borderWidth: 1,
+    borderColor: '#eee',
+    width: '50%',
+    padding: 5,
+    marginTop: 10,
+  },
+  cancelButtonText: {
+    color: colors.text,
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 

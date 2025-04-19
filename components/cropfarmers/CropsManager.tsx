@@ -4,6 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useToast, ToastModal, ToastType } from '../subcomponents/Toast'; // Assuming ToastComponent is in the same directory
 
 const API_URL = 'https://agrifit-backend-production.up.railway.app/crop_profile.php'; // Replace with your actual backend URL
 
@@ -38,6 +39,7 @@ const CropsManager = () => {
   const [showHarvestTimePicker, setShowHarvestTimePicker] = useState(false);
   const [editingCrop, setEditingCrop] = useState<Crop | null>(null);
   const modalKey = modalVisible ? 'modal-open' : 'modal-closed';
+  const { showToast, message, type, isVisible } = useToast();
 
 
   // Fetch crops when component mounts
@@ -56,53 +58,13 @@ const CropsManager = () => {
     }
   };
 
-  // Add or Update crop
-  // const handleSubmitCrop = async () => {
-  //   if (cropName && plantedOn && harvestTime && details) {
-  //     const owner = await AsyncStorage.getItem('sellerId');
-
-  //   if (!owner) {
-  //       Alert.alert('Error', 'Owner ID not found in storage');
-  //       return;
-  //   }
-  //     try {
-  //       const cropData: Crop = {
-  //         crop_name: cropName,
-  //         planting_date: plantedOn.toLocaleDateString(),
-  //         harvest_time: harvestTime.toLocaleDateString(),
-  //         amount_planted: details,
-  //         owner_id: owner, // Replace with actual user ID
-  //       };
-
-  //       let response;
-  //       console.log("Response:", cropData);
-  //       if (editingCrop) {
-  //         // Update existing crop
-  //         response = await axios.post(`${API_URL}?crop_id=${editingCrop.crop_id}`, cropData);
-  //       } else {
-  //         // Add new crop
-  //         response = await axios.post(API_URL, cropData);
-  //       }
-
-  //       // Refresh crop list
-  //       fetchCrops();
-  //       resetForm();
-  //       setModalVisible(false);
-  //       setEditingCrop(null);
-  //     } catch (error) {
-  //       console.error('Error saving crop:', error);
-  //       Alert.alert('Error', 'Failed to save crop');
-  //     }
-  //   } else {
-  //     Alert.alert('Validation Error', 'Please fill in all fields');
-  //   }
-  // };
   const handleSubmitCrop = async () => {
     if (cropName && plantedOn && harvestTime && details) {
       const owner = await AsyncStorage.getItem('sellerId');
 
       if (!owner) {
-          Alert.alert('Error', 'Owner ID not found in storage');
+          // Alert.alert('Error', 'Owner ID not found in storage');
+          showToast('Please try again', ToastType.ERROR);
           return;
       }
 
@@ -118,6 +80,7 @@ const CropsManager = () => {
   
         // Log the exact data being sent
         console.log("Sending crop data:", cropData);
+        showToast('Crop details added successfully', ToastType.SUCCESS);
   
         let response;
         if (editingCrop) {
@@ -132,6 +95,7 @@ const CropsManager = () => {
               'Content-Type': 'multipart/form-data'
             }
           });
+          showToast('Crop details updated successfully', ToastType.SUCCESS);
         } else {
           const formData = new FormData();
           Object.keys(cropData).forEach(key => {
@@ -146,6 +110,7 @@ const CropsManager = () => {
         }
   
         console.log("Full response:", response);
+        showToast('Crop details added successfully', ToastType.SUCCESS);
   
         // Refresh crop list
         fetchCrops();
@@ -153,11 +118,14 @@ const CropsManager = () => {
         setModalVisible(false);
         setEditingCrop(null);
       } catch (error) {
-        console.error('Error saving crop:', error.response ? error.response.data : error);
-        Alert.alert('Error', 'Failed to save crop');
+        // console.error('Error saving crop:', error.response ? error.response.data : error);
+        // Alert.alert('Error', 'Failed to save crop');
+        showToast('Failed to add crop details. Try again', ToastType.ERROR);
       }
+    showToast('Crop details added successfully', ToastType.SUCCESS);
     } else {
-      Alert.alert('Validation Error', 'Please fill in all fields');
+      // Alert.alert('Validation Error', 'Please fill in all fields');
+      showToast('Please fill in all fields', ToastType.ERROR);
     }
   };
 
@@ -165,10 +133,12 @@ const CropsManager = () => {
   const handleDeleteCrop = async (cropId: string) => {
     try {
       await axios.delete(`${API_URL}?crop_id=${cropId}`);
+      showToast('Crop deleted!', ToastType.SUCCESS);
       fetchCrops();
     } catch (error) {
       console.error('Error deleting crop:', error);
       Alert.alert('Error', 'Failed to delete crop');
+      showToast('Failed to delete crop. Try again', ToastType.ERROR);
     }
   };
 
@@ -244,6 +214,8 @@ const CropsManager = () => {
         renderItem={renderCropItem}
         ListEmptyComponent={<Text style={styles.emptyList}>No crops added yet</Text>}
       />
+
+
 
       {/* Modal remains mostly the same as in the original code */}
       <Modal
@@ -347,197 +319,16 @@ const CropsManager = () => {
           </ScrollView>
         </View>
       </Modal>
+
+            {/* Add the Toast Modal */}
+            <ToastModal 
+        message={message}
+        type={type}
+        isVisible={isVisible}
+      />
     </View>
   );
 };
-
-
-
-  
-// import React, { useState } from 'react';
-// import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, Modal, ScrollView } from 'react-native';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
-// import DateTimePicker from '@react-native-community/datetimepicker';
-
-// const colors = {
-//   primary: '#4CAF50',
-//   secondary: '#8BC34A',
-//   text: '#333333',
-//   background: '#F1F8E9',
-//   white: '#FFFFFF',
-//   error: '#FF6B6B',
-//   black: '#000000',
-// };
-
-// type Crop = {
-//   id: string;
-//   name: string;
-//   plantedOn: string;
-//   harvestTime: string;
-//   details: string;
-// };
-
-// const CropsManager = () => {
-//   const [cropName, setCropName] = useState('');
-//   const [plantedOn, setPlantedOn] = useState<Date | null>(null);
-//   const [harvestTime, setHarvestTime] = useState<Date | null>(null);
-//   const [details, setDetails] = useState('');
-//   const [isSeedlingsSelected, setIsSeedlingsSelected] = useState(true);
-//   const [cropList, setCropList] = useState<Crop[]>([]);
-//   const [modalVisible, setModalVisible] = useState(false);
-//   const [showPlantedOnPicker, setShowPlantedOnPicker] = useState(false);
-//   const [showHarvestTimePicker, setShowHarvestTimePicker] = useState(false);
-
-//   const handleAddCrop = () => {
-//     if (cropName && plantedOn && harvestTime && details) {
-//       const newCrop = {
-//         id: Date.now().toString(),
-//         name: cropName,
-//         plantedOn: plantedOn.toLocaleDateString(),
-//         harvestTime: harvestTime.toLocaleDateString(),
-//         details: details,
-//       };
-//       setCropList([...cropList, newCrop]);
-//       resetForm();
-//       setModalVisible(false);
-//     }
-//   };
-
-//   const resetForm = () => {
-//     setCropName('');
-//     setPlantedOn(null);
-//     setHarvestTime(null);
-//     setDetails('');
-//     setIsSeedlingsSelected(true);
-//   };
-
-//   const renderCropItem = ({ item }: { item: Crop }) => (
-//     <View style={styles.cropCard}>
-//       <Text style={styles.cropName}>{item.name}</Text>
-//       <Text>Planted On: {item.plantedOn}</Text>
-//       <Text>Expected Harvest: {item.harvestTime}</Text>
-//       <Text>{item.details.includes('acre') ? 'Area: ' : 'Seedlings: '}{item.details}</Text>
-//     </View>
-//   );
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.title}>Your Crops</Text>
-      
-//       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-//         <Text style={styles.addButtonText}>Add New Crop</Text>
-//       </TouchableOpacity>
-
-//       <FlatList
-//         data={cropList}
-//         keyExtractor={(item) => item.id}
-//         renderItem={renderCropItem}
-//         ListEmptyComponent={<Text style={styles.emptyList}>No crops added yet</Text>}
-//       />
-
-//       <Modal
-//         animationType="slide"
-//         transparent={true}
-//         visible={modalVisible}
-//         onRequestClose={() => setModalVisible(false)}
-//       >
-//         <View style={styles.modalContainer}>
-//           <ScrollView contentContainerStyle={styles.modalContent}>
-//             <Text style={styles.modalTitle}>Add New Crop</Text>
-            
-//             <TextInput
-//               style={styles.input}
-//               placeholder="Crop Name"
-//               value={cropName}
-//               onChangeText={setCropName}
-//             />
-
-//             <TouchableOpacity
-//               onPress={() => setShowPlantedOnPicker(true)}
-//               style={styles.dateInput}
-//             >
-//               <Text style={styles.dateText}>
-//                 {plantedOn ? plantedOn.toLocaleDateString() : 'Planted On'}
-//               </Text>
-//               <Ionicons name="calendar-outline" size={20} color={colors.black} />
-//             </TouchableOpacity>
-
-//             {showPlantedOnPicker && (
-//               <DateTimePicker
-//                 value={plantedOn || new Date()}
-//                 mode="date"
-//                 display="default"
-//                 onChange={(event, selectedDate) => {
-//                   setShowPlantedOnPicker(false);
-//                   if (selectedDate) setPlantedOn(selectedDate);
-//                 }}
-//               />
-//             )}
-
-//             <TouchableOpacity
-//               onPress={() => setShowHarvestTimePicker(true)}
-//               style={styles.dateInput}
-//             >
-//               <Text style={styles.dateText}>
-//                 {harvestTime ? harvestTime.toLocaleDateString() : 'Expected Harvest Time'}
-//               </Text>
-//               <Ionicons name="calendar-outline" size={20} color={colors.black} />
-//             </TouchableOpacity>
-
-//             {showHarvestTimePicker && (
-//               <DateTimePicker
-//                 value={harvestTime || new Date()}
-//                 mode="date"
-//                 display="default"
-//                 onChange={(event, selectedDate) => {
-//                   setShowHarvestTimePicker(false);
-//                   if (selectedDate) setHarvestTime(selectedDate);
-//                 }}
-//               />
-//             )}
-
-//             <View style={styles.switchContainer}>
-//               <TouchableOpacity
-//                 onPress={() => setIsSeedlingsSelected(true)}
-//                 style={[
-//                   styles.switchButton,
-//                   isSeedlingsSelected && styles.activeButton
-//                 ]}
-//               >
-//                 <Text style={styles.switchText}>Seedlings Planted</Text>
-//               </TouchableOpacity>
-//               <TouchableOpacity
-//                 onPress={() => setIsSeedlingsSelected(false)}
-//                 style={[
-//                   styles.switchButton,
-//                   !isSeedlingsSelected && styles.activeButton
-//                 ]}
-//               >
-//                 <Text style={styles.switchText}>Area of Land Planted</Text>
-//               </TouchableOpacity>
-//             </View>
-
-//             <TextInput
-//               style={styles.input}
-//               placeholder={isSeedlingsSelected ? 'Number of Seedlings' : 'Area of Land Planted (e.g., 1/2 acre)'}
-//               value={details}
-//               onChangeText={setDetails}
-//             />
-
-//             <TouchableOpacity onPress={handleAddCrop} style={styles.addButton}>
-//               <Text style={styles.addButtonText}>Add Crop</Text>
-//             </TouchableOpacity>
-
-//             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelButton}>
-//               <Text style={styles.cancelButtonText}>Cancel</Text>
-//             </TouchableOpacity>
-//           </ScrollView>
-//         </View>
-//       </Modal>
-//     </View>
-//   );
-// };
-
 
 const styles = StyleSheet.create({
   container: {
