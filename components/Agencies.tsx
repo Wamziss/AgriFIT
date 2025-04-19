@@ -106,6 +106,7 @@ const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/';
 const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState<'agency' | 'veterinarian'>('agency');
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
+  const [buttonText, setButtonText] = useState('Submit')
   const [formData, setFormData] = useState<AgencyFormData>({
     name: '',
     description: '',
@@ -115,7 +116,7 @@ const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
     category: '',
     certificateFile: null,
     licenseNumber: ''
-  });2
+  });
 
   const { showToast, message, type, isVisible } = useToast();
 
@@ -181,7 +182,7 @@ const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
           };
           formDataToSubmit.append('business_certificate', fileData as any);
         }
-  
+        setButtonText('submitting...')
         console.log('Submitting Agency Data:', Object.fromEntries(formDataToSubmit as any));
   
         const response = await axios.post(`${API_BASE_URL}agencies.php`, formDataToSubmit, {
@@ -192,7 +193,7 @@ const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
   
         console.log('Agency Submission Response:', response.data);
         showToast("You've successfully registered. Check your email for the next steps.", ToastType.SUCCESS); 
-  
+        setButtonText('Submit')
       } else if (activeTab === 'veterinarian') {
         // Validate veterinarian form
         if (!formData.name) {
@@ -223,13 +224,15 @@ const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
           phone_number: formData.phoneNumber,
           license: formData.licenseNumber
         };
-  
+        
+        setButtonText('submitting...')
         console.log('Submitting Veterinarian Data:', veterinarianData);
   
         const response = await axios.post(`${API_BASE_URL}veterinarians.php`, veterinarianData);
   
         console.log('Veterinarian Submission Response:', response.data);
         showToast("You've successfully registered. Check your email for the next steps.", ToastType.SUCCESS);
+        setButtonText('Submit')
       }
   
       // Reset form after successful submission
@@ -243,7 +246,7 @@ const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
         certificateFile: null,
         licenseNumber: ''
       });
-  
+      
     } catch (error: any) {
       console.error('Submission error details:', error);
       
@@ -263,9 +266,11 @@ const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
         console.error('Error setting up request:', error.message);
         showToast(`Submission error: ${error.message}`, ToastType.ERROR);
       }
-    }
-  };
 
+    }
+
+
+  };
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -442,7 +447,7 @@ const Agencies: React.FC<{ navigation: any }> = ({ navigation }) => {
             style={styles.button} 
             onPress={handleSubmit}
           >
-            <Text style={styles.buttonText}>Submit Registration</Text>
+            <Text style={styles.buttonText}>{buttonText}</Text>
           </TouchableOpacity>
         </View>
 

@@ -12,20 +12,20 @@ export enum ToastType {
 // Toast Configuration
 const toastConfig = {
   [ToastType.SUCCESS]: {
-    backgroundColor: '#4CAF50',
-    color: 'white'
+    backgroundColor: '#d1e7dd',
+    color: '#0f5132'
   },
   [ToastType.ERROR]: {
-    backgroundColor: '#F44336',
-    color: 'white'
+    backgroundColor: '#f8d7da',
+    color: '#842029'
   },
   [ToastType.WARNING]: {
-    backgroundColor: '#FF9800',
-    color: 'white'
+    backgroundColor: '#fff3cd',
+    color: '#664d03'
   },
   [ToastType.INFO]: {
-    backgroundColor: '#2196F3',
-    color: 'white'
+    backgroundColor: '#cff4fc',
+    color: '#055160'
   }
 };
 
@@ -92,7 +92,7 @@ export const ToastModal = ({
 const styles = StyleSheet.create({
   toastContainer: {
     position: 'absolute',
-    top: 50,
+    top: 80,
     alignSelf: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
