@@ -9,7 +9,7 @@ import LivestockFarmerHomeScreen from '@/components/livestockfarmers/Dashboard';
 
 import MyCartScreen from '@/components/consumers/Cart';
 import OrdersScreen from '@/components/consumers/Orders';
-import MyProductsScreen from '@/components/consumers/MyProducts';
+import MyRecipesScreen from '@/components/consumers/Recipes';
 
 import CropCommunityScreen from '@/components/cropfarmers/Communities';
 import CropsManagerScreen from '@/components/cropfarmers/CropsManager';
@@ -114,7 +114,7 @@ const DashboardPages = () => {
         {/* Consumers */}
         <Drawer.Screen name="Cart" component={MyCartScreen} />
         <Drawer.Screen name="Orders" component={OrdersScreen} />
-        <Drawer.Screen name="My Products" component={MyProductsScreen} />
+        <Drawer.Screen name="Recipes" component={MyRecipesScreen} />
         
         {/* Crop Farmers */}
         <Drawer.Screen name="cfCart" component={MyCartScreen} />

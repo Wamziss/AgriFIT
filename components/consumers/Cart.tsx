@@ -247,10 +247,10 @@ const Cart: React.FC = () => {
               <Text style={styles.totalAmount}>KSh {getTotalPrice().toFixed(2)}</Text>
             </View>
             
-            <TouchableOpacity style={styles.checkoutButton}>
+            {/* <TouchableOpacity style={styles.checkoutButton}>
               <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
               <Ionicons name="arrow-forward" size={20} color={colors.white} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </>
       )}
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   summaryContainer: {
-    backgroundColor: colors.background,
+    backgroundColor: '#eee',
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.secondary,
+    borderBottomColor: colors.primary,
   },
   totalText: {
     fontSize: 18,
@@ -393,21 +393,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.primary,
-  },
-  checkoutButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  checkoutButtonText: {
-    color: colors.white,
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginRight: 8,
   },
 });
 

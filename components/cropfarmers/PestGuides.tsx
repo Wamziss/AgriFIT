@@ -240,7 +240,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     margin: 8,
     borderRadius: 10,
-    padding: 16,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -251,12 +250,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 100,
     borderRadius: 10,
-    marginBottom: 12,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+    marginVertical: 8,
+    marginHorizontal: 16
   },
   loadingText: {
     fontSize: 18,

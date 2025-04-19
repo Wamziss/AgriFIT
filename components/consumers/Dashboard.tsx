@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null); // Store productId being added
-
+  const [cardWidth, setCardWidth] = useState<number | null>(null);
   const navigation = useNavigation();
   // Get token on component mount
   
@@ -204,7 +204,7 @@ const Dashboard: React.FC = () => {
   };
   
   const renderProductCard = useCallback(({ item }: { item: Product }) => (
-    <View style={styles.card}>
+    <View style={styles.card} onLayout={(event) => setCardWidth(event.nativeEvent.layout.width)}>
       <Image 
         source={item.image ? { uri: item.image } : require('../../assets/images/user.png')} 
         style={styles.productImage} 
@@ -212,11 +212,20 @@ const Dashboard: React.FC = () => {
       <View style={styles.productDetails}>
         <Text style={styles.productName}>{item.product_name}</Text>
         <Text style={styles.productPrice}>KSh {item.product_price}</Text>
-        <View style={styles.actions}>
+        <View style={[
+          styles.actions,
+          {
+            flexDirection: cardWidth && cardWidth < 300 ? 'column' : 'row',
+            alignItems: cardWidth && cardWidth < 300 ? 'stretch' : 'center',
+          }
+          ]}>
           <TouchableOpacity 
             onPress={() => addToCart(item.product_id)}
             disabled={addingToCart === item.product_id}
-            style={styles.cartButton}
+            style={[
+              styles.cartButton,
+              cardWidth && cardWidth < 300 ? { width: '100%', marginBottom: 6 } : {}
+            ]}
           >
             {addingToCart === item.product_id ? (
               <ActivityIndicator size="small" color={colors.white} />
@@ -228,7 +237,10 @@ const Dashboard: React.FC = () => {
             )}
           </TouchableOpacity>
           <TouchableOpacity 
-            style={styles.contactButton} 
+            style={[
+              styles.contactButton,
+              cardWidth && cardWidth < 300 ? { width: '100%' } : {}
+            ]} 
             onPress={() => handleContactSeller(item.seller_id as unknown as string)}
           >
             <Ionicons name='call-outline' size={15} color={colors.white} />
@@ -237,7 +249,7 @@ const Dashboard: React.FC = () => {
         </View>
       </View>
     </View>
-  ), [addingToCart]);
+  ), [addingToCart, cardWidth]);
 
   return (
     <View style={styles.container}>
