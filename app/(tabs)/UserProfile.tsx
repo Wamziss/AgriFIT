@@ -25,8 +25,6 @@ const colors = {
 };
 
 const API_BASE_URL = 'https://agrifit-backend-production.up.railway.app/register.php';
-const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/djc74qsc8/image/upload';
-const CLOUDINARY_UPLOAD_PRESET = 'agrifit_profiles'; // Create this preset in your Cloudinary dashboard for unsigned uploads
 
 const UserProfile = ({ navigation }: { navigation: any }) => {
   const [userData, setUserData] = useState({
@@ -59,9 +57,8 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
       }
     };
     
-    getToken(); // Initial load
+    getToken();
     
-    // Add a listener to refresh token when Dashboard comes into focus
     const unsubscribe = navigation?.addListener('focus', () => {
       getToken();
     });
@@ -69,13 +66,11 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
     return unsubscribe;
   }, [navigation]);
 
-  // Fetch user data from AsyncStorage and potentially refresh from backend
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setIsLoading(true);
         
-        // Check if user is still authenticated
         const token = await AsyncStorage.getItem('token');
         
         if (!token) {
@@ -83,11 +78,9 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
           return;
         }
         
-        // Fetch all user data at once to improve efficiency
         const keys = ['sellerId', 'userName', 'userEmail', 'userPhone', 'userProfilePic', 'profileType'];
         const results = await AsyncStorage.multiGet(keys);
         
-        // Convert results to an object for easier access
         const storedData = Object.fromEntries(results);
         
         const userId = storedData['sellerId'];
@@ -97,7 +90,6 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
         const userProfilePic = storedData['userProfilePic'];
         const userProfileType = storedData['profileType'];
         
-        // Update local state with AsyncStorage data if available
         if (userId) {
           setUserData(prev => ({
             ...prev,
@@ -110,15 +102,10 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
               ? { uri: userProfilePic } 
               : require('../../assets/images/user.png'),
           }));
-        } else {
-          console.log('No user ID in AsyncStorage');
         }
 
-        // Always fetch latest data from backend when available
         if (userId) {
           await fetchLatestUserData(userId);
-        } else {
-          console.log('No user ID available for backend fetch');
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -130,7 +117,6 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
 
     fetchUserData();
     
-    // Set up event listener for when app returns from background
     const unsubscribe = navigation?.addListener('focus', () => {
       fetchUserData();
     });
@@ -138,19 +124,15 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
     return unsubscribe;
   }, [navigation]);
 
-  // Fetch latest user data from backend
   const fetchLatestUserData = async (userId: string) => {
     try {
       const response = await axios.get(`${API_BASE_URL}?user_id=${userId}`);
       
-      // Check if response is an array (which seems to be the case from your logs)
       if (Array.isArray(response.data)) {
-        // Find the user in the array that matches our user ID
         const userIdNum = parseInt(userId, 10);
         const userData = response.data.find(user => parseInt(user.user_id, 10) === userIdNum);
         
         if (userData) {
-          // Update local state with backend data
           setUserData(prev => ({
             ...prev,
             name: userData.full_name || prev.name,
@@ -162,7 +144,6 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
               : prev.profilePicture,
           }));
 
-          // Update AsyncStorage to ensure data persists on next app load
           const updates: [string, string][] = [
             ['userName', userData.full_name || ''],
             ['userEmail', userData.email || ''],
@@ -175,14 +156,10 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
           }
           
           await AsyncStorage.multiSet(updates);
-        } else {
-          console.log('User not found in response array');
         }
       } else if (response.data && (response.data.full_name || response.data.email || response.data.phone_number)) {
-        // Original code for handling single object response
         const user = response.data;
 
-        // Update local state with backend data
         setUserData(prev => ({
           ...prev,
           name: user.full_name || prev.name,
@@ -194,7 +171,6 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
             : prev.profilePicture,
         }));
 
-        // Update AsyncStorage to ensure data persists on next app load
         const updates: [string, string][] = [
           ['userName', user.full_name || ''],
           ['userEmail', user.email || ''],
@@ -213,42 +189,6 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
     }
   };
 
-  // Upload image to Cloudinary
-  const uploadToCloudinary = async (imageUri: string) => {
-    try {
-      setIsUploading(true);
-      
-      // Create form data for Cloudinary
-      const formData = new FormData();
-      formData.append('file', {
-        uri: imageUri,
-        type: 'image/jpeg',
-        name: `profile_${userData.user_id}.jpg`,
-      } as any);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      formData.append('folder', 'agrifit_profiles');
-      
-      // Upload to Cloudinary
-      const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      if (response.data && response.data.secure_url) {
-        return response.data.secure_url;
-      } else {
-        throw new Error('Failed to get secure URL from Cloudinary');
-      }
-    } catch (error) {
-      console.error('Cloudinary upload error:', error);
-      throw error;
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  // Image Picker and Upload
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -260,48 +200,61 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
 
       if (!result.canceled) {
         const selectedImage = result.assets[0];
-        
-        // First upload to Cloudinary
-        const cloudinaryUrl = await uploadToCloudinary(selectedImage.uri);
-        
-        // Create form data for backend update
-        const formData = new FormData();
-        formData.append('user_id', userData.user_id);
-        formData.append('full_name', userData.name);
-        formData.append('email', userData.email);
-        formData.append('phone_number', userData.phone);
-        formData.append('profile_pic', cloudinaryUrl);
-        formData.append('update_profile_pic', 'true');
-
-        // Update to your backend
-        const response = await axios.post(API_BASE_URL, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        if (response.data.status === 'success') {
-          // Update local state
-          setUserData(prev => ({
-            ...prev,
-            profilePicture: { uri: cloudinaryUrl }
-          }));
-
-          // Save to AsyncStorage
-          await AsyncStorage.setItem('userProfilePic', cloudinaryUrl);
-
-          Alert.alert('Success', 'Profile picture updated');
-        } else {
-          throw new Error(response.data.message || 'Failed to update profile picture');
-        }
+        await uploadProfilePicture(selectedImage.uri);
       }
     } catch (error) {
-      console.error('Image upload error:', error);
-      Alert.alert('Error', 'Failed to upload profile picture');
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to select image');
     }
-  };  
+  };
+  
+  const uploadProfilePicture = async (imageUri: string) => {
+    try {
+      setIsUploading(true);
+      
+      // Create form data for the backend upload
+      const formData = new FormData();
+      formData.append('user_id', userData.user_id);
+      formData.append('update_profile_pic', 'true');
+      
+      // Append the image file
+      formData.append('profile_pic', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: `profile_${userData.user_id}.jpg`,
+      } as any);
+      
+      // Make the request to the backend
+      const response = await axios.post(API_BASE_URL, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (response.data.status === 'success') {
+        const imageUrl = response.data.profile_pic;
+        
+        // Update local state
+        setUserData(prev => ({
+          ...prev,
+          profilePicture: { uri: imageUrl }
+        }));
+        
+        // Save to AsyncStorage
+        await AsyncStorage.setItem('userProfilePic', imageUrl);
+        
+        Alert.alert('Success', 'Profile picture updated');
+      } else {
+        throw new Error(response.data.message || 'Failed to update profile picture');
+      }
+    } catch (error) {
+      console.error('Profile picture upload error:', error);
+      Alert.alert('Error', 'Failed to upload profile picture');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-  // Edit Profile
   const handleEditProfile = async () => {
     try {
       // Prepare form data
@@ -353,12 +306,12 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
 
   return (
     <View style={styles.profileContainer}>
-      {isLoading ? (
+      {/* {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Loading profile data...</Text>
         </View>
-      ) : (
+      ) : ( */}
         <>
           {/* Profile Picture with Edit Icon */}
           <TouchableOpacity style={styles.profilePicContainer} onPress={pickImage} disabled={isUploading}>
@@ -400,7 +353,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
             </Text>
           </View>
         </>
-      )}
+      {/* )} */}
 
       {/* Edit Profile Modal */}
       <Modal
@@ -480,6 +433,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   profileContainer: {

@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
-import UserProfile from './UserProfile'; // Import the UserProfile component
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import UserProfile from './UserProfile';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator } from 'react-native';
-
 
 const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; selectedProfile: string }) => {
   const [activeItem, setActiveItem] = useState('Dashboard');
   const [profile, setProfile] = useState<'Consumer' | 'Crop Farmer' | 'Livestock Farmer'>('Consumer');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
+  const [isChangingProfile, setIsChangingProfile] = useState(false);
 
   const profileMenuItems: {
     [key in 'Consumer' | 'Crop Farmer' | 'Livestock Farmer']: Array<{
@@ -23,7 +21,6 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
     Consumer: [
       { label: 'Dashboard', action: () => navigation.navigate('ConsumerHome'), icon: 'home' },
       { label: 'Cart', action: () => navigation.navigate('Cart'), icon: 'cart' },
-      // { label: 'Orders', action: () => navigation.navigate('Orders'), icon: 'clipboard' },
       { label: 'My Products', action: () => navigation.navigate('My Products'), icon: 'pricetag' },
     ],
     'Crop Farmer': [
@@ -47,9 +44,72 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
   };
 
   useEffect(() => {
-    // Synchronize the profile with the selectedProfile passed from props
-    setProfile(selectedProfile as 'Consumer' | 'Crop Farmer' | 'Livestock Farmer');
-  }, [selectedProfile]); // Runs whenever selectedProfile changes
+    // Load the last used profile type from AsyncStorage
+    const loadProfileType = async () => {
+      try {
+        const savedProfileType = await AsyncStorage.getItem('currentProfileType');
+        if (savedProfileType && 
+           (savedProfileType === 'Consumer' || 
+            savedProfileType === 'Crop Farmer' || 
+            savedProfileType === 'Livestock Farmer')) {
+          setProfile(savedProfileType);
+        } else if (selectedProfile) {
+          // If no saved profile type but selectedProfile is passed, use that
+          setProfile(selectedProfile as 'Consumer' | 'Crop Farmer' | 'Livestock Farmer');
+        }
+      } catch (error) {
+        console.error('Error loading profile type:', error);
+      }
+    };
+
+    loadProfileType();
+  }, [selectedProfile]);
+
+  // Save profile type when it changes
+  const handleProfileChange = async (value: 'Consumer' | 'Crop Farmer' | 'Livestock Farmer') => {
+    try {
+      setIsChangingProfile(true);
+      setProfile(value);
+      await AsyncStorage.setItem('currentProfileType', value);
+      
+      // Update the profileType in backend too (optional)
+      const userId = await AsyncStorage.getItem('sellerId');
+      
+      if (userId) {
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        formData.append('profile_type', value);
+        formData.append('update_profile_type', 'true');
+
+        // Send update request to backend
+        fetch('https://agrifit-backend-production.up.railway.app/register.php', {
+          method: 'POST',
+          body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Profile type update response:', data);
+          // Update the profileType in AsyncStorage
+          AsyncStorage.setItem('profileType', value);
+        })
+        .catch(error => {
+          console.error('Error updating profile type:', error);
+        })
+        .finally(() => {
+          // Navigate to the appropriate dashboard
+          navigation.navigate(`${value}Home`);
+          setIsChangingProfile(false);
+        });
+      } else {
+        navigation.navigate(`${value}Home`);
+        setIsChangingProfile(false);
+      }
+    } catch (error) {
+      console.error('Error saving profile type:', error);
+      setIsChangingProfile(false);
+    }
+  };
 
   const handleMenuItemPress = (item: { label: string; action: () => void; }) => {
     setActiveItem(item.label);
@@ -58,21 +118,26 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
 
   return (
     <View style={styles.drawerContent}>
-      <UserProfile navigation={undefined} />
+      <UserProfile navigation={navigation} />
       <View style={styles.profileContainer}>
         <Text style={styles.drawerHeader}>Profile:</Text>
         <Picker
           selectedValue={profile}
-          onValueChange={(value: 'Consumer' | 'Crop Farmer' | 'Livestock Farmer') => {
-            setProfile(value);
-            navigation.navigate(`${value}Home`);
-          }}
+          onValueChange={handleProfileChange}
           style={styles.profilePicker}
+          enabled={!isChangingProfile}
         >
           <Picker.Item label="Consumer" value="Consumer" />
           <Picker.Item label="Crop Farmer" value="Crop Farmer" />
           <Picker.Item label="Livestock Farmer" value="Livestock Farmer" />
         </Picker>
+        {isChangingProfile && (
+          <ActivityIndicator 
+            size="small" 
+            color="#4CAF50" 
+            // style={styles.profileSwitchIndicator} 
+          />
+        )}
       </View>
       <View style={styles.menuItems}>
         {profileMenuItems[profile] &&
@@ -82,7 +147,7 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
               onPress={() => handleMenuItemPress(item)}
               style={[
                 styles.menuItem,
-                activeItem === item.label && styles.activeMenuItem, // Apply active styling
+                activeItem === item.label && styles.activeMenuItem,
               ]}
             >
               <Ionicons name={item.icon} size={20} color={activeItem === item.label ? '#fff' : '#333'} />
@@ -96,12 +161,12 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
       <View style={{ flex: 1 }} />
       <TouchableOpacity
         onPress={() => {
-          setActiveItem('Sell'); // Update the activeItem state
-          navigation.navigate('Sell'); // Navigate to the Sell screen
+          setActiveItem('Sell');
+          navigation.navigate('Sell');
         }}
         style={[
           styles.menuItem,
-          activeItem === 'Sell' && styles.activeMenuItem, // Apply active styling for 'Sell'
+          activeItem === 'Sell' && styles.activeMenuItem,
         ]}
       >
         <Ionicons
@@ -112,22 +177,17 @@ const CustomDrawer = ({ navigation, selectedProfile }: { navigation: any; select
         <Text style={[styles.menuItemText, activeItem === 'Sell' && styles.activeMenuItemText]}>Sell</Text>
       </TouchableOpacity>
 
-
-      {/* <TouchableOpacity onPress={() => navigation.navigate('Messages')} style={[styles.menuItem, activeItem === 'Messages' && styles.activeMenuItem]}>
-        <Ionicons name="chatbubbles" size={20} color={activeItem === 'Messages' ? '#fff' : '#333'} />
-        <Text style={[styles.menuItemText, activeItem === 'Messages' && styles.activeMenuItemText]}>Messages</Text>
-      </TouchableOpacity> */}
-
       <TouchableOpacity 
-      onPress={() => {
-        setIsLoggingOut(true); // start loading
-        setTimeout(() => {
-          AsyncStorage.removeItem('token');
-          setIsLoggingOut(false); // stop loading (optional, since navigating away)
-          navigation.navigate('Auth');
-        }, 1000);
-      }} 
-        style={[styles.menuItem, activeItem === 'Logout' && styles.activeMenuItem]}>
+        onPress={() => {
+          setIsLoggingOut(true);
+          setTimeout(() => {
+            AsyncStorage.removeItem('token');
+            setIsLoggingOut(false);
+            navigation.navigate('Auth');
+          }, 1000);
+        }} 
+        style={[styles.menuItem, activeItem === 'Logout' && styles.activeMenuItem]}
+      >
         <Ionicons name="log-out" size={20} color={activeItem === 'Logout' ? '#fff' : '#333'} />
         <Text style={[styles.menuItemText, activeItem === 'Logout' && styles.activeMenuItemText]}>Logout</Text>
       </TouchableOpacity>
