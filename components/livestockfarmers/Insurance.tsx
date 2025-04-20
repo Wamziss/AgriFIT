@@ -110,7 +110,7 @@ const handleContact = (agency: Company) => {
               style={styles.contactButton} 
               onPress={() => handleContact(item)}
             >
-              <Text style={styles.contactButtonText}>Contact</Text>
+              <Text style={styles.contactButtonText}>Contact Agency</Text>
             </TouchableOpacity>
           </View>
         )}

@@ -231,7 +231,7 @@ const CropsManager = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Crops</Text>
+      <Text style={styles.title}>My Crops</Text>
       
       <TouchableOpacity 
         style={styles.addButton} 
