@@ -33,7 +33,7 @@ const Drawer = createDrawerNavigator();
 
 const DashboardPages = () => {
   const [userProfile, setUserProfile] = useState('');
-  const [initialRouteName, setInitialRouteName] = useState('ConsumerHome');
+  const [initialRouteName, setInitialRouteName] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {

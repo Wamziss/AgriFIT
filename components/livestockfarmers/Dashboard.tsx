@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
       });
       
       // Log the response to check if sub_category field is present
-      console.log('Sample product data:', response.data.length > 0 ? response.data[0] : 'No products');
+      // console.log('Sample product data:', response.data.length > 0 ? response.data[0] : 'No products');
       
       setProducts(response.data);
       setLoading(false);

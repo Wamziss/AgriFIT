@@ -115,11 +115,13 @@ export default function SignUpScreen({ navigation }: { navigation: any }) {
         const fullName = result.full_name || '';
         const email = result.email || '';
         const phone = result.phone || '';
+        const profileType = result.profileType || '';
         const profilePicture = result.profilePicture || 'default-profile-picture-url';
   
         await AsyncStorage.setItem('userName', fullName);
         await AsyncStorage.setItem('userEmail', email);
         await AsyncStorage.setItem('userPhone', phone);
+        await AsyncStorage.setItem('profile_type', profileType);
         await AsyncStorage.setItem('userProfilePic', profilePicture);
   
         showToast('Sign up successful!', ToastType.SUCCESS);

@@ -45,12 +45,15 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
     profileType: '',
   });
   const [token, setToken] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
     
   useEffect(() => {
     const getToken = async () => {
       try {
         const storedToken = await AsyncStorage.getItem('token');
+        const setuserprofile = await AsyncStorage.getItem('profile_type');
+        console.log(setuserprofile);
         setToken(storedToken);
       } catch (error) {
         console.error('Error retrieving token:', error);
@@ -80,6 +83,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
         
         const keys = ['sellerId', 'userName', 'userEmail', 'userPhone', 'userProfilePic', 'profileType'];
         const results = await AsyncStorage.multiGet(keys);
+        console.log(results);
         
         const storedData = Object.fromEntries(results);
         
@@ -349,7 +353,7 @@ const UserProfile = ({ navigation }: { navigation: any }) => {
             <Text style={styles.userDetail}>{userData.email || 'No Email'}</Text>
             <Text style={styles.userDetail}>{userData.phone || 'No Phone'}</Text>
             <Text style={[styles.userDetail, styles.profileTypeLabel]}>
-              Profile Type: <Text style={styles.profileTypeValue}>{userData.profileType || 'Consumer'}</Text>
+              Profile Type: <Text style={styles.profileTypeValue}>{userData.profileType || 'No Set Profile'}</Text>
             </Text>
           </View>
         </>
